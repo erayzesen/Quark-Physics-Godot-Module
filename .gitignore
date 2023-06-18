@@ -1,0 +1,4 @@
+/*.o
+QuarkPhysics/*.o
+QuarkPhysics/json/json.hpp.gch
+
