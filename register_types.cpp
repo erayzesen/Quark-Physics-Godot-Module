@@ -17,7 +17,7 @@
 #include "qraycast_object.h"
 
 
-void register_quarkphysics_types(){
+void register_quark_physics_types(){
     ClassDB::register_virtual_class<QBodyNode>();
     ClassDB::register_class<QRigidBodyNode>();
     ClassDB::register_class<QSoftBodyNode>();
@@ -35,6 +35,6 @@ void register_quarkphysics_types(){
     
 }
 
-void unregister_quarkphysics_types(){
+void unregister_quark_physics_types(){
 
 }

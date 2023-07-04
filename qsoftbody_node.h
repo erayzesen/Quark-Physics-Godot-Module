@@ -54,7 +54,10 @@ public:
     bool get_self_collision_enabled();
     bool get_passivation_of_internal_springs_enabled();
     bool get_shape_matching_enabled();
-    float get_shape_mathing_rate();
+    float get_shape_matching_rate();
+    bool get_shape_matching_fixed_transform_enabled();
+    Vector2 get_shape_matching_fixed_position();
+    float get_shape_matching_fixed_rotation();
     float get_particle_spesific_mass();
     bool get_particle_spesific_mass_enabled();
     
@@ -67,7 +70,10 @@ public:
     QSoftBodyNode *set_self_collision_enabled(bool value);
     QSoftBodyNode *set_passivation_of_internal_springs_enabled(bool value);
     QSoftBodyNode *set_shape_matching_enabled(bool value);
-    QSoftBodyNode *set_shape_mathing_rate(float value);
+    QSoftBodyNode *set_shape_matching_rate(float value);
+    QSoftBodyNode *set_shape_matching_fixed_transform_enabled(bool value);
+    QSoftBodyNode *set_shape_matching_fixed_position(Vector2 value);
+    QSoftBodyNode *set_shape_matching_fixed_rotation(float value);
     QSoftBodyNode *set_particle_spesific_mass(float value);
     QSoftBodyNode *set_particle_spesific_mass_enabled(bool value);
 

@@ -89,9 +89,10 @@ void QSoftBody::Update()
 		PreserveAreas();
 	}
 
-	if(enableShapeMatching){
+	//It's added world contraints operations
+	/* if(enableShapeMatching){
 		ApplyShapeMatching();
-	}
+	} */
 
 
 
@@ -144,7 +145,6 @@ void QSoftBody::PreserveAreas()
 			QVector centerPos=(spring->GetParticleB()->GetGlobalPosition()+spring->GetParticleA()->GetGlobalPosition())*0.5f;
 			QParticle::ApplyForceToParticleSegment(spring->GetParticleA(),spring->GetParticleB(),volumeForces[i],centerPos);
 
-
 		}
 
 
@@ -152,11 +152,11 @@ void QSoftBody::PreserveAreas()
 
 }
 
-pair<QVector, float> QSoftBody::GetAveragePositionAndRotation(int meshIndex){
-	QMesh * mesh=GetMeshAt(meshIndex);
-	if(mesh->GetParticleCount()==1)
-		return pair<QVector, float>(mesh->GetParticleAt(0)->GetGlobalPosition(),0.0f);
-	auto particles=mesh->particles;
+
+
+pair<QVector, float> QSoftBody::GetAveragePositionAndRotation(vector<QParticle*> particles){
+	if(particles.size()==1)
+		return pair<QVector, float>(particles[0]->GetGlobalPosition(),0.0f);
 	//Finding Actual Position
 	QVector averagePosition=QVector::Zero();
 	QVector localCenterPosition=QVector::Zero();
@@ -195,6 +195,7 @@ pair<QVector, float> QSoftBody::GetAveragePositionAndRotation(int meshIndex){
 
 }
 
+
 void QSoftBody::ApplyShapeMatching()
 {
 	//Time scale feature
@@ -207,37 +208,61 @@ void QSoftBody::ApplyShapeMatching()
 			ts=world->GetTimeScale();
 		}
 	}
+
 	for(int i=0;i<_meshes.size();i++){
 		QMesh *mesh=_meshes[i];
 		if(mesh->GetParticleCount()<2)
 			continue;
 
+		vector<QParticle*> particles;
+		if(mesh->GetCollisionBehavior()==QMesh::CollisionBehaviors::POLYLINE ){
+			for(int n=0;n<mesh->closedPolygons.size();n++ ){
+				vector<QParticle*> polygon=mesh->closedPolygons[n];
+				particles.insert(particles.end(),polygon.begin(),polygon.end() );
+			}
+		}else{
+			particles=mesh->particles;
+		}
+
 		QVector localCenterPosition;
-		for(auto particle:mesh->particles){
+		for(auto particle:particles){
 			localCenterPosition+=particle->GetPosition();
 		}
-		localCenterPosition/=mesh->particles.size();
+		localCenterPosition/=particles.size();
+		
+		QVector averagePosition;
+		float averageRotation;
+		if(enableShapeMatchingFixedTransform){
+			localCenterPosition=QVector::Zero();
+			averagePosition=shapeMatchingFixedPosition;
+			averageRotation=shapeMatchingFixedRotation;
+		}else{
+			auto averagePositionAndRotation=GetAveragePositionAndRotation(particles);
+			averagePosition=averagePositionAndRotation.first;
+			averageRotation=averagePositionAndRotation.second;
 
-		auto averagePositionAndRotation=GetAveragePositionAndRotation(i);
-		QVector averagePosition=averagePositionAndRotation.first;
-		float averageRotation=averagePositionAndRotation.second;
-		//world->GetGizmos()->push_back(new QGizmoCircle(averagePosition,3.0f) );
+		}	
 
 
-		for(int n=0;n<mesh->particles.size();n++){
-			QParticle * particle=mesh->particles[n];
+
+
+		for(int n=0;n<particles.size();n++){
+			QParticle * particle=particles[n];
 			QVector targetPos=(particle->GetPosition()-localCenterPosition).Rotated(-averageRotation);
 			targetPos+=averagePosition;
 			//world->GetGizmos()->push_back(new QGizmoCircle(targetPos,3.0f) );
 			QVector distance=targetPos-particle->GetGlobalPosition();
 			QVector distanceUnit=distance.Normalized();
 			float distanceLen=distance.Length();
-			QVector force=(distanceLen*distanceLen*distanceUnit)*shapeMatchingRate*0.01f*ts;
+			float forceLinear=min(distanceLen*distanceLen*0.002f*shapeMatchingRate*ts,distanceLen*ts);
+			QVector force=forceLinear*distanceUnit;
 			particle->ApplyForce(force);
 		}
 
 	}
 }
+
+
 
 
 

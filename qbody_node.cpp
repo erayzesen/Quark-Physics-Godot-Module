@@ -1,6 +1,6 @@
 #include "qbody_node.h"
 #include "qworld_node.h"
-#include "quarkphysics/qsoftbody.h"
+#include "QuarkPhysics/qsoftbody.h"
 
 
 void QBodyNode::_notification(int what) {

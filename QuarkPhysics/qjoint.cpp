@@ -77,18 +77,26 @@ void QJoint::Update()
 		return;
 	}
 
-	if(bodyA->GetEnabled()==false ||  bodyB->GetEnabled()==false)
+	
+	if(bodyA==nullptr && bodyB==nullptr)
 		return;
 
-
 	if(bodyA!=nullptr){
-		if(bodyA->GetMode()==QBody::STATIC && bodyB==nullptr){
+
+		if(bodyA->GetEnabled()==false )
+			return;
+		
+		if( bodyA->GetMode()==QBody::STATIC && bodyB==nullptr ){
 			return;
 		}
 	}
 
 	if(bodyB!=nullptr){
-		if(bodyB->GetMode()==QBody::STATIC && bodyA==nullptr){
+
+		if(bodyB->GetEnabled()==false )
+			return;
+
+		if( bodyB->GetMode()==QBody::STATIC  && bodyA==nullptr){
 			return;
 		}
 	}
@@ -96,6 +104,7 @@ void QJoint::Update()
 	float k=0.5f;
 
 	if(bodyA!=nullptr && bodyB!=nullptr){
+		
 		if(bodyA->GetMode()==QBody::STATIC && bodyB->GetMode()==QBody::STATIC){
 			return;
 		}
