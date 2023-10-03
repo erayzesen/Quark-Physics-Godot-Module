@@ -24,6 +24,9 @@ void QWorldNode::_notification(int what) {
 				
 		}
 		break;
+	case NOTIFICATION_PREDELETE :
+		
+		break;
     
     default:
         break;
@@ -149,7 +152,9 @@ QWorldNode *QWorldNode::remove_body_at(int index) {
 		return this;
 	}
 	QBodyNode *bodyNode=get_body_at(index);
-	worldObject->RemoveBody(bodyNode->bodyObject);
+	if (worldObject!=nullptr){
+		worldObject->RemoveBody(bodyNode->bodyObject);
+	}
 	bodyNodes.erase(bodyNodes.begin()+index);
 
 	return this;
@@ -165,12 +170,15 @@ int QWorldNode::get_body_count() {
 
 int QWorldNode::get_body_index(Object *body_node) {
 	QBodyNode *qbody_node=QBodyNode::type_cast(body_node);
+	int index=-1;
 	if(qbody_node==nullptr){
 		print_error("Quark Physics Error: Not valid body type! | QWorldNode.get_body_index() ");
-		return -1;
+		return index;
 	}
 	auto it=find(bodyNodes.begin(),bodyNodes.end(),qbody_node);
-	int index=it-bodyNodes.begin();
+	if (it!=bodyNodes.end() ){
+		index=it-bodyNodes.begin();
+	}
 	return index;
 }
 
@@ -405,6 +413,7 @@ void QWorldNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_iteration_count"),&QWorldNode::get_iteration_count );
 	ClassDB::bind_method(D_METHOD("get_time_scale"),&QWorldNode::get_time_scale );
 	ClassDB::bind_method(D_METHOD("get_debug_renderer_enabled"),&QWorldNode::get_debug_renderer_enabled );
+	ClassDB::bind_method(D_METHOD("get_enabled"),&QWorldNode::get_enabled );
 
 	//Set
 	ClassDB::bind_method(D_METHOD("set_gravity","value"),&QWorldNode::set_gravity );
@@ -413,6 +422,7 @@ void QWorldNode::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_iteration_count","value"),&QWorldNode::set_iteration_count );
 	ClassDB::bind_method(D_METHOD("set_time_scale","value"),&QWorldNode::set_time_scale );
 	ClassDB::bind_method(D_METHOD("set_debug_renderer_enabled","value"),&QWorldNode::set_debug_renderer_enabled );
+	ClassDB::bind_method(D_METHOD("set_enabled","value"),&QWorldNode::set_enabled );
 
 	//Body
     ClassDB::bind_method(D_METHOD("add_body_node","body_node"),&QWorldNode::add_body );

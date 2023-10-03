@@ -11,6 +11,7 @@ void QJointObject::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_collisions_enabled"),&QJointObject::get_collisions_enabled );
 	ClassDB::bind_method(D_METHOD("get_groove_enabled"),&QJointObject::get_groove_enabled );
 	ClassDB::bind_method(D_METHOD("get_length"),&QJointObject::get_length );
+	ClassDB::bind_method(D_METHOD("get_balance"),&QJointObject::get_balance );
 	ClassDB::bind_method(D_METHOD("get_rigidity"),&QJointObject::get_rigidity );
 	ClassDB::bind_method(D_METHOD("get_enabled"),&QJointObject::get_enabled );
 
@@ -22,6 +23,7 @@ void QJointObject::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_collision_enabled","value"),&QJointObject::set_collision_enabled );
 	ClassDB::bind_method(D_METHOD("set_groove_enabled","value"),&QJointObject::set_groove_enabled );
 	ClassDB::bind_method(D_METHOD("set_length","value"),&QJointObject::set_length );
+	ClassDB::bind_method(D_METHOD("set_balance","value"),&QJointObject::set_balance );
 	ClassDB::bind_method(D_METHOD("set_rigidity","value"),&QJointObject::set_rigidity );
 	ClassDB::bind_method(D_METHOD("set_enabled","value"),&QJointObject::set_enabled );
 
@@ -74,6 +76,10 @@ float QJointObject::get_length() {
 	return jointObject->GetLength();
 }
 
+float QJointObject::get_balance() {
+	return jointObject->GetBalance();
+}
+
 float QJointObject::get_rigidity() {
 	return jointObject->GetRigidity();
 }
@@ -90,7 +96,6 @@ QJointObject *QJointObject::set_body_node_a(Object *rigid_body_node) {
 		bodyA=nullptr;
 		return this;
 	}
-	
 	if(rigid_body_node->get_class()!="QRigidBodyNode"){
 		print_error("Quark Physics Error: Invalid rigid body object type! | QJointObject.set_body_node_a() ");
 		return this;
@@ -143,6 +148,11 @@ QJointObject *QJointObject::set_groove_enabled(bool value) {
 
 QJointObject *QJointObject::set_length(float value) {
 	jointObject->SetLength(value);
+	return this;
+}
+
+QJointObject *QJointObject::set_balance(float value) {
+	jointObject->SetBalance(value);
 	return this;
 }
 

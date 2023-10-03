@@ -75,6 +75,7 @@ void QBodyNode::_bind_methods() {
      ClassDB::bind_method(D_METHOD("get_can_sleep"),&QBodyNode::get_can_sleep );
      ClassDB::bind_method(D_METHOD("get_friction"),&QBodyNode::get_friction );
      ClassDB::bind_method(D_METHOD("get_static_friction"),&QBodyNode::get_static_friction );
+     ClassDB::bind_method(D_METHOD("get_air_friction"),&QBodyNode::get_air_friction );
      ClassDB::bind_method(D_METHOD("get_mass"),&QBodyNode::get_mass );
      ClassDB::bind_method(D_METHOD("get_restitution"),&QBodyNode::get_restitution );
      ClassDB::bind_method(D_METHOD("get_force"),&QBodyNode::get_force );
@@ -102,6 +103,7 @@ void QBodyNode::_bind_methods() {
      ClassDB::bind_method(D_METHOD("set_mode","value"),&QBodyNode::set_mode );
      ClassDB::bind_method(D_METHOD("set_friction","value"),&QBodyNode::set_friction );
      ClassDB::bind_method(D_METHOD("set_static_friction","value"),&QBodyNode::set_static_friction );
+     ClassDB::bind_method(D_METHOD("set_air_friction","value"),&QBodyNode::set_air_friction );
      ClassDB::bind_method(D_METHOD("set_mass","value"),&QBodyNode::set_mass );
      ClassDB::bind_method(D_METHOD("set_restitution","value"),&QBodyNode::set_restitution );
      ClassDB::bind_method(D_METHOD("set_body_spesific_time_scale_enabled","value"),&QBodyNode::set_body_spesific_time_scale_enabled );
@@ -124,6 +126,7 @@ void QBodyNode::_bind_methods() {
      ADD_PROPERTY( PropertyInfo(Variant::REAL, "mass"),"set_mass","get_mass" );
      ADD_PROPERTY( PropertyInfo(Variant::REAL, "friction"),"set_friction","get_friction" );
      ADD_PROPERTY( PropertyInfo(Variant::REAL, "static_friction"),"set_static_friction","get_static_friction" );
+     ADD_PROPERTY( PropertyInfo(Variant::REAL, "air_friction"),"set_air_friction","get_air_friction" );
      ADD_PROPERTY( PropertyInfo(Variant::REAL, "restitution"),"set_restitution","get_restitution" );
 
      ADD_GROUP("Collision Layers","");
@@ -134,6 +137,9 @@ void QBodyNode::_bind_methods() {
      ADD_SIGNAL(MethodInfo("collision",PropertyInfo(Variant::OBJECT,"body_node"),PropertyInfo(Variant::DICTIONARY,"info")  ) );
      ADD_SIGNAL(MethodInfo("pre_step" ));
      ADD_SIGNAL(MethodInfo("step" ));
+
+     BIND_CONSTANT(DYNAMIC);
+     BIND_CONSTANT(STATIC);
 
      
 
@@ -230,6 +236,10 @@ float QBodyNode::get_friction() {
 
 float QBodyNode::get_static_friction() {
 	return bodyObject->GetStaticFriction();
+}
+
+float QBodyNode::get_air_friction() {
+	return bodyObject->GetAirFriction();
 }
 
 float QBodyNode::get_mass() {
@@ -362,6 +372,11 @@ QBodyNode *QBodyNode::set_friction(float value) {
 
 QBodyNode *QBodyNode::set_static_friction(float value) {
 	bodyObject->SetStaticFriction(value);
+	return this;
+}
+
+QBodyNode *QBodyNode::set_air_friction(float value) {
+    bodyObject->SetAirFriction(value);
 	return this;
 }
 

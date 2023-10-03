@@ -59,6 +59,7 @@ public:
         set_anchor_position_b(anchor_world_pos_b);
 
         set_length(length);
+        return this;
         
         
     };
@@ -72,7 +73,7 @@ public:
         set_anchor_position_b(anchor_world_pos_b);
 
         set_length( (anchor_world_pos_b-anchor_world_pos_a).length() );
-        
+        return this;
         
     };
 
@@ -84,7 +85,7 @@ public:
         set_anchor_position_a(common_anchor_world_pos);
         set_anchor_position_b(common_anchor_world_pos);
         
-        
+        return this;
     };
 
     
@@ -99,6 +100,7 @@ public:
     bool get_collisions_enabled();
     bool get_groove_enabled();
     float get_length();
+    float get_balance();
     float get_rigidity();
     bool get_enabled();
 
@@ -110,6 +112,7 @@ public:
     QJointObject *set_collision_enabled(bool value);
     QJointObject *set_groove_enabled(bool value);
     QJointObject *set_length(float value);
+    QJointObject *set_balance(float value);
     QJointObject *set_rigidity(float value);
     QJointObject *set_enabled(bool value);
 

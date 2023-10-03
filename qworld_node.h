@@ -60,8 +60,14 @@ public:
         set_process(true);
     };
     ~QWorldNode(){
-        if(worldObject!=nullptr)
+        if(worldObject!=nullptr){
+            //Removing 
+            worldObject->ClearJoints(true);
+            worldObject->ClearSprings(true);
+            worldObject->ClearRaycasts(true);
             delete worldObject;
+            worldObject=nullptr;
+        }
     };
 
     //Get Methods
@@ -81,6 +87,10 @@ public:
     float get_time_scale(){
         return worldObject->GetTimeScale();
     };
+
+    bool get_enabled(){
+        return worldObject->GetEnabled();
+    }
 
     //Set Methods
     QWorldNode *set_gravity(Vector2 value){
@@ -103,6 +113,11 @@ public:
         worldObject->SetTimeScale(value);
         return this;
     };
+
+    QWorldNode *set_enabled(bool value){
+        worldObject->SetEnabled(value);
+        return this;
+    }
 
     //Collisions
 

@@ -39,13 +39,13 @@ class QBodyNode: public Node2D{
 public:
     enum Modes{
         DYNAMIC,
-        STATIC
+        STATIC,
     };
 
     enum bodyNodeTypes{
         RIGID,
         AREA,
-        SOFT
+        SOFT,
     };
 
     
@@ -65,8 +65,10 @@ public:
         
     };
     ~QBodyNode(){
-        if(bodyObject!=nullptr)
+        if(bodyObject!=nullptr){
             delete bodyObject;
+            bodyObject=nullptr;
+        }
     };
 
     virtual void init_events(){
@@ -117,6 +119,8 @@ public:
     float get_friction();
 
     float get_static_friction();
+
+    float get_air_friction();
 
     float get_mass();
 
@@ -171,6 +175,8 @@ public:
     QBodyNode *set_friction(float value);
 
     QBodyNode *set_static_friction(float value);
+
+    QBodyNode *set_air_friction(float value);
 
     QBodyNode *set_mass(float value);
 
