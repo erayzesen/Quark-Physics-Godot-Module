@@ -25,65 +25,75 @@
  *
 **************************************************************************************/
 
+
+
+
 #ifndef QBROADPHASE_H
 #define QBROADPHASE_H
 
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include "qaabb.h"
 #include "qbody.h"
-#include "qvector.h"
-
-class QBroadPhase
-{
-
-	int hashFunction(int x, int y){
-		return x+31*y;
-	}
-	QVector inverseCellSize;
-
-	struct pairHash {
-		size_t operator()(const std::pair<QBody*, QBody*> &p) const {
-			 return std::hash<QBody*>()(p.first) + std::hash<QBody*>()(p.second);
-		}
-	};
-
-	struct pairEqual {
-		bool operator()(const std::pair<QBody*, QBody*> &p1, const std::pair<QBody*, QBody*> &p2) const {
-			return ( (p1.first == p2.first && p1.second == p2.second) ) ;
-
-		}
-	};
-
-	void RemoveBodyFromCells(QAABB referenceAABB,QBody *body);
-
-	bool isBodyAdded=false;
+#include "qmanifold.h"
+#include "qcollision.h"
+#include "qaabb.h"
 
 
+
+
+class QBroadPhase {   
 public:
-	QVector cellSize;
-
-	unordered_map<int,unordered_set<QBody*>> collisionGroups;
-	QBroadPhase(QVector cellSize): cellSize(cellSize) {
-		inverseCellSize=QVector(1/cellSize.x,1/cellSize.y);
-	};
-	~QBroadPhase();
-
-	QBroadPhase* Add(QBody *body);
-
-	QBroadPhase* Clear();
-
-	std::unordered_set<std::pair<QBody*,QBody*>,pairHash,pairEqual> pairList;
-
-	std::unordered_set<std::pair<QBody*,QBody*>,pairHash,pairEqual>* GetPairs();
+    QWorld *world;
+    QBroadPhase(QWorld * targetWorld);
+    QBroadPhase(){};
+    ~QBroadPhase();
 
 
+    
+    struct Node{
+        QAABB aabb;
+        QBody *obj;
+        Node *left;
+        Node *right;
+        bool isLeaf;
+        Node *parent;
+        int id;
+        Node(QBody *object, QAABB AABB, int nodeID) : obj(object), aabb(AABB) {
+            isLeaf=true;
+            id=nodeID;
+        }; 
+        
+        
+    };
 
-	//Methods
+    Node *root;
+    vector<Node*> nodes;
 
+    void ReCreateTree(vector<QBody *> &objectList);
+    void ClearTree();
 
+    void Query(QAABB &AABB, vector<QBody*> &list);
 
+    void QueryInNode(Node* node, QAABB &AABB, vector<QBody*> &list);
 
+    void GetPairs(vector<pair<QBody*,QBody*> > &pairCollection);
+    void GetPairsBetweenNodes(Node * nodeA, Node *nodeB, vector<pair<QBody*,QBody*> > &pairCollection, unordered_set<int> &checkedPairList);
+
+    void Insert(QBody *object);
+    void Remove(QBody *object);
+    void Update(QBody *object, QAABB &AABB);
+
+    int GetNewNodeID();
+
+    int lastID=0;
+
+    
+    
+
+	 
 };
+
 
 #endif // QBROADPHASE_H

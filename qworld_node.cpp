@@ -408,8 +408,12 @@ bool QWorldNode::get_debug_renderer_enabled() {
 void QWorldNode::_bind_methods() {
 	//Get
 	ClassDB::bind_method(D_METHOD("get_gravity"),&QWorldNode::get_gravity );
-	ClassDB::bind_method(D_METHOD("get_enable_sleeping"),&QWorldNode::get_enable_sleeping );
-	ClassDB::bind_method(D_METHOD("get_enable_broadphase"),&QWorldNode::get_enable_broadphase );
+	ClassDB::bind_method(D_METHOD("get_sleeping_enabled"),&QWorldNode::get_sleeping_enabled );
+	ClassDB::bind_method(D_METHOD("get_sleeping_position_tolerance"),&QWorldNode::get_sleeping_position_tolerance );
+	ClassDB::bind_method(D_METHOD("get_sleeping_rotation_tolerance"),&QWorldNode::get_sleeping_rotation_tolerance );
+	ClassDB::bind_method(D_METHOD("get_broadphase_enabled"),&QWorldNode::get_broadphase_enabled );
+	ClassDB::bind_method(D_METHOD("get_spatial_hashing_enabled"),&QWorldNode::get_spatial_hashing_enabled );
+	ClassDB::bind_method(D_METHOD("get_spatial_hashing_cell_size"),&QWorldNode::get_spatial_hashing_cell_size );
 	ClassDB::bind_method(D_METHOD("get_iteration_count"),&QWorldNode::get_iteration_count );
 	ClassDB::bind_method(D_METHOD("get_time_scale"),&QWorldNode::get_time_scale );
 	ClassDB::bind_method(D_METHOD("get_debug_renderer_enabled"),&QWorldNode::get_debug_renderer_enabled );
@@ -417,8 +421,12 @@ void QWorldNode::_bind_methods() {
 
 	//Set
 	ClassDB::bind_method(D_METHOD("set_gravity","value"),&QWorldNode::set_gravity );
-	ClassDB::bind_method(D_METHOD("set_enable_sleeping","value"),&QWorldNode::set_enable_sleeping );
-	ClassDB::bind_method(D_METHOD("set_enable_broadphase","value"),&QWorldNode::set_enable_broadphase );
+	ClassDB::bind_method(D_METHOD("set_sleeping_enabled","value"),&QWorldNode::set_sleeping_enabled );
+	ClassDB::bind_method(D_METHOD("set_sleeping_position_tolerance","value"),&QWorldNode::set_sleeping_position_tolerance );
+	ClassDB::bind_method(D_METHOD("set_sleeping_rotation_tolerance","value"),&QWorldNode::set_sleeping_rotation_tolerance );
+	ClassDB::bind_method(D_METHOD("set_broadphase_enabled","value"),&QWorldNode::set_broadphase_enabled );
+	ClassDB::bind_method(D_METHOD("set_spatial_hashing_enabled","value"),&QWorldNode::set_spatial_hashing_enabled );
+	ClassDB::bind_method(D_METHOD("set_spatial_hashing_cell_size","value"),&QWorldNode::set_spatial_hashing_cell_size );
 	ClassDB::bind_method(D_METHOD("set_iteration_count","value"),&QWorldNode::set_iteration_count );
 	ClassDB::bind_method(D_METHOD("set_time_scale","value"),&QWorldNode::set_time_scale );
 	ClassDB::bind_method(D_METHOD("set_debug_renderer_enabled","value"),&QWorldNode::set_debug_renderer_enabled );
@@ -475,8 +483,11 @@ void QWorldNode::_bind_methods() {
 	//Properties
 	ADD_PROPERTY( PropertyInfo(Variant::VECTOR2, "gravity"),"set_gravity","get_gravity" );
 	ADD_PROPERTY( PropertyInfo(Variant::INT, "iteration_count"),"set_iteration_count","get_iteration_count" );
-	ADD_PROPERTY( PropertyInfo(Variant::BOOL, "enable_sleeping"),"set_enable_sleeping","get_enable_sleeping" );
+	ADD_PROPERTY( PropertyInfo(Variant::BOOL, "enable_sleeping"),"set_sleeping_enabled","get_sleeping_enabled" );
 	ADD_PROPERTY( PropertyInfo(Variant::REAL, "time_scale"),"set_time_scale","get_time_scale" );
+	ADD_PROPERTY( PropertyInfo(Variant::BOOL, "enable_broadphase"),"set_broadphase_enabled","get_broadphase_enabled" );
+	ADD_PROPERTY( PropertyInfo(Variant::BOOL, "enable_spatial_hashing"),"set_spatial_hashing_enabled","get_spatial_hashing_enabled" );
+	ADD_PROPERTY( PropertyInfo(Variant::REAL, "spatial_hashing_cell_size"),"set_spatial_hashing_cell_size","get_spatial_hashing_cell_size" );
 	ADD_PROPERTY( PropertyInfo(Variant::BOOL, "debug_renderer"),"set_debug_renderer_enabled","get_debug_renderer_enabled" );
 	
 	

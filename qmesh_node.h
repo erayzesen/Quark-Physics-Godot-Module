@@ -63,7 +63,7 @@ protected:
     //Collections
     vector<QParticleObject*> particleObjects;
     vector<QSpringObject*> springObjects;
-    vector< vector<QParticleObject*> > closedPolygons;
+    vector<QParticleObject*> polygon;
 
     void debug_render_in_editor();
     void vector_render_in_editor();
@@ -124,10 +124,13 @@ public:
     int get_spring_count();
 
     //Polygon Operations
-    QMeshNode *add_polygon(Array polygon);
-    QMeshNode *remove_polygon_at(int index);
-    Array get_polygon(int index);
-    int get_polygon_count();
+    QMeshNode *set_polygon(Array particleCollection);
+    QMeshNode *add_particle_to_polygon(Object *particleObject);
+    QMeshNode *remove_particle_from_polygon(Object *particleObject);
+    QMeshNode *remove_particle_from_polygon_at(int index);
+    QMeshNode *remove_polygon();
+    QParticleObject *get_particle_from_polygon(int index);
+    int get_polygon_particle_count();
 
     //Rendering Features
     bool get_vector_rendering_enabled(){

@@ -75,12 +75,30 @@ public:
         QVector g=worldObject->GetGravity();
         return Vector2(g.x,g.y);
     };
-    bool get_enable_sleeping(){
-        return worldObject->GetEnableSleeping();
+    bool get_sleeping_enabled(){
+        return worldObject->GetSleepingEnabled();
     };
-    bool get_enable_broadphase(){
-        return worldObject->GetEnableBroadphase();
+
+	float get_sleeping_position_tolerance(){
+		return worldObject->GetSleepingPositionTolerance();
+	}
+
+    float get_sleeping_rotation_tolerance(){
+		return worldObject->GetSleepingRotationTolerance();
+	}
+
+    bool get_broadphase_enabled(){
+        return worldObject->GetBroadphaseEnabled();
     };
+
+    bool get_spatial_hashing_enabled(){
+        return worldObject->GetSpatialHashingEnabled();
+    };
+
+    float get_spatial_hashing_cell_size(){
+        return worldObject->GetSpatialHashingCellSize();
+    }
+
     int get_iteration_count(){
         return worldObject->GetIterationCount();
     };
@@ -97,14 +115,34 @@ public:
         worldObject->SetGravity(QVector(value.x,value.y) );
         return this;
     };
-    QWorldNode *set_enable_sleeping(bool value){
-        worldObject->SetEnableSleeping(value);
+    
+    QWorldNode *set_sleeping_enabled(bool value){
+        worldObject->SetSleepingEnabled(value);
         return this;
     };
-    QWorldNode *set_enable_broadphase(bool value){
-        worldObject->SetEnableBroadphase(value);
+
+    QWorldNode *set_sleeping_position_tolerance(float value){
+        worldObject->SetSleepingPositionTolerance(value);
         return this;
     };
+     QWorldNode *set_sleeping_rotation_tolerance(float value){
+        worldObject->SetSleepingRotationTolerance(value);
+        return this;
+    };
+
+    QWorldNode *set_broadphase_enabled(bool value){
+        worldObject->SetBroadphaseEnabled(value);
+        return this;
+    };
+    QWorldNode *set_spatial_hashing_enabled(bool value){
+        worldObject->SetSpatialHashingEnabled(value);
+        return this;
+    };
+
+    QWorldNode *set_spatial_hashing_cell_size(float value){
+        worldObject->SetSpatialHashingCellSize(value);
+        return this;
+    }
     QWorldNode *set_iteration_count(int value){
         worldObject->SetIterationCount(value);
         return this;

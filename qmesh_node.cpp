@@ -88,13 +88,11 @@ void QMeshNode::debug_render_in_editor() {
 
     //Draw polygons
     if(enablePolygons){
-        for(int i=0;i<meshData.closedPolygonList.size();i++){
-            vector<int> polygon=meshData.closedPolygonList[i];
-            for(int n=0;n<polygon.size();n++){
-                QVector p=meshData.particlePositions[ polygon[n] ];
-                QVector pn=meshData.particlePositions[polygon[(n+1)%polygon.size()] ];
-                draw_line(Vector2(p.x,p.y),Vector2(pn.x,pn.y),colliderColor);
-            }
+        
+        for(int n=0;n<meshData.polygon.size();n++){
+            QVector p=meshData.particlePositions[ meshData.polygon[n] ];
+            QVector pn=meshData.particlePositions[meshData.polygon[(n+1)%meshData.polygon.size()] ];
+            draw_line(Vector2(p.x,p.y),Vector2(pn.x,pn.y),colliderColor);
         }
     }
     //Draw particles
@@ -124,45 +122,45 @@ void QMeshNode::vector_render_in_editor() {
     strokeColors.push_back(strokeColor);
     
     //draw polygons
-    for(auto pg:meshData.closedPolygonList){
-        Vector<Vector2> polygonPoints;
-        for(int i=0;i<pg.size();i++){
-            int pi=pg[i];
-            QVector qpos=meshData.particlePositions[pi];
-            polygonPoints.push_back( Vector2(qpos.x,qpos.y) );
-        }
-        if(polygonPoints.size()>0)
-            polygonPoints.push_back(polygonPoints[0] );
-
-        if(enableFill){
-            if(enableTriangulation){
-                Vector<int> triangles;
-                Triangulate::triangulate(polygonPoints,triangles);
-                //Geometry::decompose_polygon_in_convex(polygonPoints);
-                for(int t=0;t<triangles.size();t+=3 ){
-                    if( (t+1)>=triangles.size() && (t+2)>=triangles.size() )
-						continue;
-                    Vector<Vector2> tri;
-                    int pi1=triangles[t];
-                    int pi2=triangles[t+1];
-                    int pi3=triangles[t+2];
-                    tri.push_back( polygonPoints[pi1] );
-                    tri.push_back( polygonPoints[pi2] );
-                    tri.push_back( polygonPoints[pi3] );
-
-                    Vector<int> tri_indexes;
-					bool isValidTri=Triangulate::triangulate(tri,tri_indexes);
-                    if(isValidTri)
-                        draw_polygon(tri,fillColors,Vector<Vector2>(),Ref<Texture>(),Ref<Texture>(),enableAntialias);
-                    
-                }
-            }else{
-                draw_polygon(polygonPoints, fillColors,Vector<Vector2>(),Ref<Texture>(),Ref<Texture>(),enableAntialias);
-            }
-        }
-        if(enableStroke)
-            draw_polyline_colors(polygonPoints,strokeColors,strokeWidth,enableAntialias);
+    
+    Vector<Vector2> polygonPoints;
+    for(int i=0;i<meshData.polygon.size();i++){
+        int pi=meshData.polygon[i];
+        QVector qpos=meshData.particlePositions[pi];
+        polygonPoints.push_back( Vector2(qpos.x,qpos.y) );
     }
+    if(polygonPoints.size()>0)
+        polygonPoints.push_back(polygonPoints[0] );
+
+    if(enableFill){
+        if(enableTriangulation){
+            Vector<int> triangles;
+            Triangulate::triangulate(polygonPoints,triangles);
+            //Geometry::decompose_polygon_in_convex(polygonPoints);
+            for(int t=0;t<triangles.size();t+=3 ){
+                if( (t+1)>=triangles.size() && (t+2)>=triangles.size() )
+                    continue;
+                Vector<Vector2> tri;
+                int pi1=triangles[t];
+                int pi2=triangles[t+1];
+                int pi3=triangles[t+2];
+                tri.push_back( polygonPoints[pi1] );
+                tri.push_back( polygonPoints[pi2] );
+                tri.push_back( polygonPoints[pi3] );
+
+                Vector<int> tri_indexes;
+                bool isValidTri=Triangulate::triangulate(tri,tri_indexes);
+                if(isValidTri)
+                    draw_polygon(tri,fillColors,Vector<Vector2>(),Ref<Texture>(),Ref<Texture>(),enableAntialias);
+                
+            }
+        }else{
+            draw_polygon(polygonPoints, fillColors,Vector<Vector2>(),Ref<Texture>(),Ref<Texture>(),enableAntialias);
+        }
+    }
+    if(enableStroke)
+        draw_polyline_colors(polygonPoints,strokeColors,strokeWidth,enableAntialias);
+    
 
     //draw particles
     for(int i=0;i<meshData.particlePositions.size();i++){
@@ -201,15 +199,16 @@ void QMeshNode::on_post_enter_tree() {
                     QSpringObject *s=new QSpringObject(meshObject->GetSpringAt(i));
                     springObjects.push_back(s);
                 }
-                for(int i=0;i<meshObject->GetClosedPolygonCount();i++ ){ //polygons
-                    vector<QParticle*> originalPolygon=meshObject->GetClosedPolygonAt(i);
-                    vector<QParticleObject*> polygon;
-                    for(int n=0;n<originalPolygon.size();n++ ){
-                        QParticleObject *p=get_particle_object_with_object(originalPolygon[n]);
-                        polygon.push_back(p);
-                    } 
-                    closedPolygons.push_back(polygon);    
-                }
+                
+                int polygonParticleCount=meshObject->GetPolygonParticleCount(); //poltgon
+                for(int n=0;n<polygonParticleCount;n++ ){
+                    QParticleObject *p=get_particle_object_with_object(meshObject->GetParticleFromPolygon(n));
+                    polygon.push_back(p);
+                } 
+                vector<QParticleObject*> polygon;
+                
+                    
+                
 
             }else{
                 meshObject=new QMesh();
@@ -267,10 +266,13 @@ void QMeshNode::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_spring_count"),&QMeshNode::get_spring_count );
 
     //Polygon Operations
-    ClassDB::bind_method(D_METHOD("add_polygon","polygon"),&QMeshNode::add_polygon );
-    ClassDB::bind_method(D_METHOD("remove_polygon_at","index"),&QMeshNode::remove_polygon_at );
-    ClassDB::bind_method(D_METHOD("get_polygon_count"),&QMeshNode::get_polygon_count );
-    ClassDB::bind_method(D_METHOD("get_polygon","index"),&QMeshNode::get_polygon );
+    ClassDB::bind_method(D_METHOD("set_polygon","particleCollection"),&QMeshNode::set_polygon );
+    ClassDB::bind_method(D_METHOD("add_particle_to_polygon","particleObject"),&QMeshNode::add_particle_to_polygon );
+    ClassDB::bind_method(D_METHOD("remove_particle_from_polygon","particleObject"),&QMeshNode::remove_particle_from_polygon );
+    ClassDB::bind_method(D_METHOD("remove_particle_from_polygon_at","index"),&QMeshNode::remove_particle_from_polygon_at );
+    ClassDB::bind_method(D_METHOD("remove_polygon"),&QMeshNode::remove_polygon );
+    ClassDB::bind_method(D_METHOD("get_particle_from_polygon","index"),&QMeshNode::get_particle_from_polygon );
+    ClassDB::bind_method(D_METHOD("get_polygon_particle_count"),&QMeshNode::get_polygon_particle_count );
 
 
     //Rendering features
@@ -429,25 +431,23 @@ QMeshNode *QMeshNode::remove_particle_at(int index) {
         }
     }
     //Remove linked polygons
-    i=0;
-    while(i<closedPolygons.size()){
-        vector<QParticleObject*> &pol=closedPolygons[i];
-        bool matched=false;
-        int n=0;
-        while(n<pol.size() ){
-            if(pol[n]==particle_object){
-                pol.erase(pol.begin()+n );
-                matched=true;
-            }else{
-                ++n;
-            }
-        }
-        if(matched==true && pol.size()<3){
-            closedPolygons.erase(closedPolygons.begin()+i);
+    
+    
+    vector<QParticleObject*> &pol=polygon;
+    bool matched=false;
+    int n=0;
+    while(n<pol.size() ){
+        if(pol[n]==particle_object){
+            pol.erase(pol.begin()+n );
+            matched=true;
         }else{
-            ++i;
+            ++n;
         }
     }
+    if(matched==true && pol.size()<3){
+        polygon.clear();
+    }
+    
 
     particleObjects.erase(particleObjects.begin()+index);
     meshObject->RemoveParticleAt(index);
@@ -511,19 +511,19 @@ int QMeshNode::get_spring_count() {
 	return springObjects.size();
 }
 
-
 //Polygon Operations
-QMeshNode *QMeshNode::add_polygon(Array polygon) {
-    //type check
-    vector<QParticleObject*> polygonParticleObjects;
+
+QMeshNode *QMeshNode::set_polygon(Array particleCollection) {
+
+	vector<QParticleObject*> polygonParticleObjects;
     vector<QParticle*> polygonParticles;
 
-    for(int i=0;i<polygon.size();i++){
-        if(polygon.get(i).get_type()!=Variant::OBJECT){
+    for(int i=0;i<particleCollection.size();i++){
+        if(particleCollection.get(i).get_type()!=Variant::OBJECT){
             print_error("Quark Physics Error: The element of the polygon array isn't a valid particle object type! | QMeshNode.add_polygon() ");
             return this;
         }
-        Object *element=polygon.get(i);
+        Object *element=particleCollection.get(i);
         if(element->get_class()!="QParticleObject"){
             print_error("Quark Physics Error: The element of the polygon array isn't a valid particle object type! | QMeshNode.add_polygon() ");
             return this;
@@ -532,30 +532,79 @@ QMeshNode *QMeshNode::add_polygon(Array polygon) {
         polygonParticleObjects.push_back(particleObject);
         polygonParticles.push_back(particleObject->particleObject);
     }
-    closedPolygons.push_back(polygonParticleObjects);
-    meshObject->AddClosedPolygon(polygonParticles);
 
-	return this;
+    polygon=polygonParticleObjects;
+    meshObject->SetPolygon(polygonParticles);
+
+    return  this;
 }
 
-QMeshNode *QMeshNode::remove_polygon_at(int index) {
-	closedPolygons.erase(closedPolygons.begin()+index);
-    meshObject->RemoveClosedPolygonAt(index);
-	return this;
-}
+QMeshNode *QMeshNode::add_particle_to_polygon(Object *particleObject) {
 
-Array QMeshNode::get_polygon(int index) {
-	Array res;
-    vector<QParticleObject*> &targetPolygon=closedPolygons[index];
-    for(int i=0;i<targetPolygon.size();i++){
-        res.append(targetPolygon[i]);
+    
+    if(particleObject->get_class()!="QParticleObject"){
+        print_error("Quark Physics Error: There is no a valid particle object type! | QMeshNode.add_particle_to_polygon() ");
+        return this;
     }
-    return res;
+    QParticleObject *po=static_cast<QParticleObject*>(particleObject);
+    polygon.push_back(po);
+    meshObject->AddParticleToPolygon(po->particleObject);
+
+	return this;
 }
 
-int QMeshNode::get_polygon_count() {
-	return closedPolygons.size();
+QMeshNode *QMeshNode::remove_particle_from_polygon(Object *particleObject) {
+    if(particleObject->get_class()!="QParticleObject"){
+        print_error("Quark Physics Error: There is no a valid particle object type! | QMeshNode.remove_particle_from_polygon() ");
+        return this;
+    }
+    QParticleObject *po=static_cast<QParticleObject*>(particleObject);
+
+    auto findedIt=find(polygon.begin(),polygon.end(),po );
+    if(findedIt!=polygon.end() ){
+        int index=findedIt-polygon.begin();
+        remove_particle_from_polygon_at(index);
+    }
+
+
+	return this;
 }
+
+QMeshNode *QMeshNode::remove_particle_from_polygon_at(int index) {
+    if(index>=polygon.size() ){
+        print_error("Quark Physics Error: the index value is out of the range! | QMeshNode.remove_particle_from_polygon_at() ");
+        return this;
+    }
+    if(polygon.size()==3){
+        print_error("Quark Physics Warning: The number of particles of the polygon has been less than 3! | QMeshNode.remove_particle_from_polygon_at() ");
+        return this;
+    }
+    QParticleObject *po=static_cast<QParticleObject*>(polygon[index] );
+    meshObject->RemoveParticleFromPolygonAt(index);
+    polygon.erase(polygon.begin()+index );
+    
+	return this;
+}
+
+QMeshNode *QMeshNode::remove_polygon() {
+    meshObject->RemovePolygon();
+    polygon.clear();
+	return this;
+}
+
+QParticleObject *QMeshNode::get_particle_from_polygon(int index) {
+    if(index>=polygon.size() ){
+        print_error("Quark Physics Error: the index value is out of the range! | QMeshNode.get_particle_from_polygon() ");
+        return nullptr;
+    }
+	return polygon[index];
+}
+
+int QMeshNode::get_polygon_particle_count() {
+	return polygon.size() ;
+}
+
+
 
 QMeshNode *QMeshNode::type_cast(Object *obj) {
 	Node2D *node=Object::cast_to<Node2D>(obj);

@@ -32,11 +32,10 @@ void QRenderer::RenderDebug(QWorldNode *worldNode) {
 
 			Color colliderColor=bodyNode->get_mode()==QBody::Modes::STATIC ? colors.COLLIDER_STATIC:colors.COLLIDER_DYNAMIC;
 			//Drawing polygons
-			for(int i=0;i<meshObject->GetClosedPolygonCount();i++){
-				vector<QParticle*> polygon=meshObject->GetClosedPolygonAt(i);
-				for(int n=0;n<polygon.size();n++){
-					QVector p=polygon[n]->GetGlobalPosition();
-					QVector pn=polygon[(n+1)%polygon.size()]->GetGlobalPosition();
+			if(meshObject->GetPolygonParticleCount()>2 ){
+				for(int n=0;n<meshObject->GetPolygonParticleCount();n++){
+					QVector p=meshObject->GetParticleFromPolygon(n)->GetGlobalPosition();
+					QVector pn=meshObject->GetParticleFromPolygon((n+1)%meshObject->GetPolygonParticleCount())->GetGlobalPosition();
 					worldNode->draw_line(Vector2(p.x,p.y),Vector2(pn.x,pn.y),colliderColor);
 				}
 			}
@@ -127,11 +126,11 @@ void QRenderer::RenderVector(QWorldNode *worldNode){
 			Vector<Color> strokeColors;
         	strokeColors.push_back(meshNode->strokeColor);
 			//Drawing polygons
-			for(int i=0;i<meshObject->GetClosedPolygonCount();i++){
-				vector<QParticle*> polygon=meshObject->GetClosedPolygonAt(i);
+			if(meshObject->GetPolygonParticleCount()>2){
+				int polygonSize=meshObject->GetPolygonParticleCount();
 				Vector<Vector2> polygonPoints;
-				for(int n=0;n<polygon.size();n++){
-					QVector p=polygon[n]->GetGlobalPosition();
+				for(int n=0;n<polygonSize;n++){
+					QVector p=meshObject->GetParticleFromPolygon(n)->GetGlobalPosition();
 					polygonPoints.push_back(Vector2(p.x,p.y) );
 				}
 				if(polygonPoints.size()>0)

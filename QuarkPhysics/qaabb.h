@@ -35,6 +35,7 @@ class QAABB
 	QVector minPos;
 	QVector maxPos;
 	QVector size;
+	float volume;
 	static float multiplier;
 public:
 
@@ -47,6 +48,7 @@ public:
 		minPos=minPosition;
 		maxPos=maxPosition;
 		size=maxPos-minPos;
+		volume=size.x*size.y;
 	};
 
 	//General Get Methods
@@ -69,6 +71,7 @@ public:
 		minPos=minPosition;
 		maxPos=maxPosition;
 		size=maxPos-minPos;
+		volume=size.x*size.y;
 		return this;
 	}
 
@@ -85,15 +88,15 @@ public:
 		return (minPos+maxPos)*0.5f;
 	}
 
-	bool isContain(QAABB &otherAABB)const{
-		bool result=true;
-		result=result && minPos.x<=otherAABB.minPos.x;
-		result=result && minPos.y<=otherAABB.minPos.y;
-		result=result && maxPos.x>=otherAABB.maxPos.x;
-		result=result && maxPos.y>=otherAABB.maxPos.y;
+	float GetVolume() const{
+		return volume;
+	}
 
-		return result;
-
+	double isContain(const QAABB& otherAABB) const {
+		return (minPos.x <= otherAABB.minPos.x) &&
+			(minPos.y <= otherAABB.minPos.y) &&
+			(maxPos.x >= otherAABB.maxPos.x) &&
+			(maxPos.y >= otherAABB.maxPos.y);
 	}
 	static QAABB Combine( QAABB &b1, QAABB &b2){
 		QAABB output=QAABB();
@@ -116,11 +119,15 @@ public:
 		return QAABB(minPos-amountVec,maxPos+amountVec);
 
 	}
-	bool isCollidingWith(QAABB otherAABB) const{
-		if( minPos.x<=otherAABB.maxPos.x && maxPos.x>=otherAABB.minPos.x && minPos.y<=otherAABB.maxPos.y && maxPos.y>=otherAABB.minPos.y ){
-			return true;
-		}
-		return false;
+
+	QAABB FattedWithRate(float rate)const{
+		QVector ratedSize=size*rate*0.5f;
+		return QAABB(minPos-ratedSize,maxPos+ratedSize);
+	}
+
+	bool isCollidingWith(const QAABB& otherAABB) const {
+		return maxPos.x >= otherAABB.minPos.x && minPos.x <= otherAABB.maxPos.x &&
+			maxPos.y >= otherAABB.minPos.y && minPos.y <= otherAABB.maxPos.y;
 	}
 
 
