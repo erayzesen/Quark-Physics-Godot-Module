@@ -52,6 +52,7 @@ public:
     float get_area_preserving_rigidity();
     float get_target_preservation_area();
     bool get_self_collision_enabled();
+    float get_self_collisions_specified_radius();
     bool get_passivation_of_internal_springs_enabled();
     bool get_shape_matching_enabled();
     float get_shape_matching_rate();
@@ -68,6 +69,7 @@ public:
     QSoftBodyNode *set_area_preserving_rigidity(float value);
     QSoftBodyNode *set_target_preservation_area(float value);
     QSoftBodyNode *set_self_collision_enabled(bool value);
+    QSoftBodyNode *set_self_collisions_specified_radius(float value);
     QSoftBodyNode *set_passivation_of_internal_springs_enabled(bool value);
     QSoftBodyNode *set_shape_matching_enabled(bool value);
     QSoftBodyNode *set_shape_matching_rate(float value);

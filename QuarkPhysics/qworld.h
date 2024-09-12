@@ -49,24 +49,11 @@ using namespace std;
  */
 class QWorld{
 
-	struct bodyPairHash {
-		size_t operator()(const std::pair<QBody*, QBody*>& p) const {
-			std::size_t h1 = std::hash<QBody*>{}(p.first);
-			std::size_t h2 = std::hash<QBody*>{}(p.second);
-			return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
-		}
-	};
-
-	struct bodyPairEqual {
-		bool operator()(const std::pair<QBody*, QBody*>& p1, const std::pair<QBody*, QBody*>& p2) const {
-			return (p1.first == p2.first && p1.second == p2.second) ||
-				(p1.first == p2.second && p1.second == p2.first);
-		}
-	};
-
 protected:
+
+	
 	//Collections
-	vector<QBody*> bodies=vector<QBody*>();
+	
 
 	vector <QJoint*> joints=vector<QJoint*>();
 
@@ -77,12 +64,15 @@ protected:
 	vector <QGizmo*> gizmos=vector<QGizmo*>();
 
 	vector<vector<QBody*> > sleepingIslands=vector<vector<QBody*> >();
-	unordered_set<pair<QBody*, QBody*>, bodyPairHash,bodyPairEqual> collisionExceptions;
 
-	QBroadPhase broadPhase;
+	unordered_set<pair<QBody*, QBody*>, QBody::BodyPairHash,QBody::BodyPairEqual> collisionExceptions;
 
 	vector<QManifold> manifolds;
 
+	//Broadphase
+	QBroadPhase *broadPhase=nullptr;
+
+	
 
 	//Physics World Properties
 
@@ -92,8 +82,6 @@ protected:
 	bool enableBroadphase=true;
 	int iteration=4;
 	float timeScale=1.0f;
-	bool enableSpatialHashing=false;
-	float spatialHashingSize=512.0f;
 
 
 	//Sleeping
@@ -105,7 +93,7 @@ protected:
 	int debugCollisionTestCount=0; // any collision method call count
 
 	void ClearGizmos();
-	void ClearBodies(bool deleteAll=false);
+	void ClearBodies();
 
 
 	//Collisions, Dynamic Colliders Islands and Sleeping Feature
@@ -121,9 +109,15 @@ protected:
 	//Constraints
 	void UpdateConstraints();
 
+	
 
 
 public:
+
+	
+
+	vector<QBody*> bodies=vector<QBody*>();
+	
 	/* It's the maximum world size in pixels. It is used in some calculations that require maximum values. */
 	inline static float MAX_WORLD_SIZE=99999.0f;
 
@@ -156,15 +150,6 @@ public:
 		return enableBroadphase;
 	}
 
-	/** Returns whether  spatial hashing feature is enabled in the broad phase. The Spatial hashing operation can improves performance for big scenes.  */
-	bool GetSpatialHashingEnabled(){
-		return enableSpatialHashing;
-	}
-
-	/** Returns cell size value of the spatial hashing.  */
-	float GetSpatialHashingCellSize(){
-		return spatialHashingSize;
-	}
 
 	/** Returns the iteration count per step of physics in the world. 
 	 * The Iteration count determines the stability level of the simulation.
@@ -220,25 +205,18 @@ public:
 		return this;
 	}
 
-	/** Sets whether  spatial hashing feature is enabled in the broad phase. The Spatial hashing operation can improves performance for big scenes. 
-	 * @param value A value to set
-	*/
-	QWorld *SetSpatialHashingEnabled(bool value){
-		if(value==true){
-			broadPhase.ClearTree();
-			broadPhase.ReCreateTree(bodies);
+	/**Custom solutions inheriting from the QBroadphase class can be defined for the broad phase.
+	 * This allows external broad phase solutions to be plugged in or removed.
+	 * @param externalBroadphase A QBroadphase-typed class representing the external broad phase solution.
+	 */
+	QWorld *SetBroadphase(QBroadPhase *externalBroadphase){
+		broadPhase=externalBroadphase;
+		if (broadPhase!=nullptr){
+			broadPhase->Clear();
 		}
-		enableSpatialHashing=value;
 		return this;
 	}
 
-	/** Sets cell sizes for spatial hashing.  
-	 * @param value A value to set
-	*/
-	QWorld *SetSpatialHashingCellSize(float value){
-		spatialHashingSize=value;
-		return this;
-	}
 
 	/** Sets the iteration count per step of physics in the world. 
 	 * Iteration count determines stability level of the simulation.
@@ -265,6 +243,7 @@ public:
 		enabled=value;
 		return this;
 	}
+	
 
 	
 	
@@ -281,7 +260,7 @@ public:
 	 * @param bodyA A body in the world.
 	 * @param bodyB Another body in the world.
 	 */
-	static vector<QCollision::Contact> GetCollisions(QBody *bodyA, QBody *bodyB);
+	static vector<QCollision::Contact*> GetCollisions(QBody *bodyA, QBody *bodyB);
 
 
 	/**Adds a body to the world
@@ -496,16 +475,16 @@ public:
 	~QWorld();
 	/** Removes all joints from the world. 
 	 */
-	QWorld *ClearJoints(bool deleteAll=false);
+	QWorld *ClearJoints();
 	/** Removes all springs from the world.
 	 */
-	QWorld *ClearSprings(bool deleteAll=false);
+	QWorld *ClearSprings();
 	/** It removes all raycasts from the world.
 	 */
-	QWorld *ClearRaycasts(bool deleteAll=false);
+	QWorld *ClearRaycasts();
 	/** It removes all objects from the world. 
 	 */
-	QWorld *ClearWorld(bool deleteAll=false);
+	QWorld *ClearWorld();
 
 	friend class QCollision;
 	friend class QManifold;

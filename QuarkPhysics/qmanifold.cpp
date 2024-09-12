@@ -61,30 +61,6 @@ QManifold::QManifold(QBody *bodyA, QBody *bodyB)
 
 }
 
-//void QManifold::Update(vector<QCollision::Contact> newContacts)
-//{
-
-//	//contacts.clear();
-//	vector<QCollision::Contact> mergedContacts;
-//	bool isFlipFlop=false;
-//	for(int i=0;i<newContacts.size();i++){
-//		auto nc=newContacts[i];
-//		int k=-1;
-//		for(int n=0;n<contacts.size();n++){
-//			auto c=contacts[n];
-//			if(c.particle==nc.particle){
-
-//			}
-
-//		}
-//		mergedContacts.push_back(nc);
-
-
-
-//	}
-//	contacts=mergedContacts;
-//}
-
 
 
 QVector QManifold::GetRelativeVelocity(QParticle *contactParticle,vector<QParticle*> referenceParticles,QVector rRef, QVector rInc)
@@ -149,7 +125,7 @@ void QManifold::Solve()
 
 
 	for(int i=0;i<contacts.size();i++){
-		QCollision::Contact *contact=&contacts[i];
+		QCollision::Contact *contact=contacts[i];
 
 		if(betweenRigidbodies){
 			contact->penetration*=0.75f;
@@ -168,7 +144,7 @@ void QManifold::Solve()
 
 
 
-		bodyA->GetWorld()->gizmos.push_back(new QGizmoCircle(contact->position,2.0f));
+		bodyA->GetWorld()->gizmos.push_back( new QGizmoRect( QAABB(contact->position+QVector(-0.5f,-0.5f) ,contact->position+QVector(0.5f,0.5f) ) ));
 
 
 
@@ -305,7 +281,7 @@ void QManifold::SolveFrictionAndVelocities()
 
 
 	for(int i=0;i<contacts.size();i++){
-		QCollision::Contact *contact=&contacts[i];
+		QCollision::Contact *contact=contacts[i];
 		//Don't apply friction and velocity to not solved contacts
 		if(contact->solved==false) continue;
 

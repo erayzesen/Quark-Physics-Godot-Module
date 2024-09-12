@@ -126,10 +126,6 @@ public:
 
     float get_restitution();
 
-    Vector2 get_force();
-
-    float get_angular_force();
-
     bool get_body_specific_time_scale_enabled();
 
     float get_body_specific_time_scale();
@@ -156,14 +152,6 @@ public:
 
     QBodyNode *add_body_previous_rotation(float angle_radian);
 
-    QBodyNode *set_force(Vector2 value);
-
-    QBodyNode *add_force(Vector2 value);
-
-    QBodyNode *set_angular_force(float value);
-
-    QBodyNode *add_angular_force(float value);
-
     QBodyNode *set_layers_bit(int value);
 
     QBodyNode *set_collidable_layers_bit(int value);
@@ -187,6 +175,10 @@ public:
     QBodyNode *set_body_spesific_time_scale(float value);
 
     QBodyNode *set_enabled(bool value);
+
+    //Sleeping
+
+    QBodyNode *wake_up();
 
     //Meshes
 

@@ -38,59 +38,29 @@
 #include "qbody.h"
 #include "qmanifold.h"
 #include "qcollision.h"
-#include "qaabb.h"
 
 
 
+class QBroadPhase { 
+protected:
+    std::unordered_set<pair<QBody*, QBody*>,QBody::BodyPairHash,QBody::BodyPairEqual> pairs;
+    bool BodiesCanCollide(QBody * bodyA,QBody *bodyB){
+        return QBody::CanCollide(bodyA,bodyB);
+    }
 
-class QBroadPhase {   
 public:
-    QWorld *world;
-    QBroadPhase(QWorld * targetWorld);
-    QBroadPhase(){};
-    ~QBroadPhase();
+    vector<QBody*> &bodies;
+    QBroadPhase(vector<QBody*> &worldBodies): bodies(worldBodies){};
+    ~QBroadPhase(){};
 
 
-    
-    struct Node{
-        QAABB aabb;
-        QBody *obj;
-        Node *left;
-        Node *right;
-        bool isLeaf;
-        Node *parent;
-        int id;
-        Node(QBody *object, QAABB AABB, int nodeID) : obj(object), aabb(AABB) {
-            isLeaf=true;
-            id=nodeID;
-        }; 
-        
-        
-    };
+    virtual void Clear();
 
-    Node *root;
-    vector<Node*> nodes;
+    virtual std::unordered_set<pair<QBody*, QBody*>,QBody::BodyPairHash,QBody::BodyPairEqual> &GetPairs();
 
-    void ReCreateTree(vector<QBody *> &objectList);
-    void ClearTree();
+    virtual void Insert(QBody* body);
 
-    void Query(QAABB &AABB, vector<QBody*> &list);
-
-    void QueryInNode(Node* node, QAABB &AABB, vector<QBody*> &list);
-
-    void GetPairs(vector<pair<QBody*,QBody*> > &pairCollection);
-    void GetPairsBetweenNodes(Node * nodeA, Node *nodeB, vector<pair<QBody*,QBody*> > &pairCollection, unordered_set<int> &checkedPairList);
-
-    void Insert(QBody *object);
-    void Remove(QBody *object);
-    void Update(QBody *object, QAABB &AABB);
-
-    int GetNewNodeID();
-
-    int lastID=0;
-
-    
-    
+    virtual void Remove(QBody* body);
 
 	 
 };

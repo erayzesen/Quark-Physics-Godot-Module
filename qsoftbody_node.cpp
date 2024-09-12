@@ -9,7 +9,8 @@ void QSoftBodyNode::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_area_preserving_rate"), &QSoftBodyNode::get_area_preserving_rate );   
     ClassDB::bind_method(D_METHOD("get_area_preserving_rigidity"), &QSoftBodyNode::get_area_preserving_rigidity );   
     ClassDB::bind_method(D_METHOD("get_target_preservation_area"), &QSoftBodyNode::get_target_preservation_area );   
-    ClassDB::bind_method(D_METHOD("get_self_collision_enabled"), &QSoftBodyNode::get_self_collision_enabled );   
+    ClassDB::bind_method(D_METHOD("get_self_collision_enabled"), &QSoftBodyNode::get_self_collision_enabled ); 
+    ClassDB::bind_method(D_METHOD("get_self_collisions_specified_radius"), &QSoftBodyNode::get_self_collisions_specified_radius );     
     ClassDB::bind_method(D_METHOD("get_passivation_of_internal_springs_enabled"), &QSoftBodyNode::get_passivation_of_internal_springs_enabled );   
     ClassDB::bind_method(D_METHOD("get_shape_matching_enabled"), &QSoftBodyNode::get_shape_matching_enabled );   
     ClassDB::bind_method(D_METHOD("get_shape_matching_rate"), &QSoftBodyNode::get_shape_matching_rate );   
@@ -25,7 +26,8 @@ void QSoftBodyNode::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_area_preserving_rate","value"), &QSoftBodyNode::set_area_preserving_rate );   
     ClassDB::bind_method(D_METHOD("set_area_preserving_rigidity","value"), &QSoftBodyNode::set_area_preserving_rigidity );   
     ClassDB::bind_method(D_METHOD("set_target_preservation_area","value"), &QSoftBodyNode::set_target_preservation_area );   
-    ClassDB::bind_method(D_METHOD("set_self_collision_enabled","value"), &QSoftBodyNode::set_self_collision_enabled );   
+    ClassDB::bind_method(D_METHOD("set_self_collision_enabled","value"), &QSoftBodyNode::set_self_collision_enabled );
+    ClassDB::bind_method(D_METHOD("set_self_collisions_specified_radius","value"), &QSoftBodyNode::set_self_collisions_specified_radius );   
     ClassDB::bind_method(D_METHOD("set_passivation_of_internal_springs_enabled","value"), &QSoftBodyNode::set_passivation_of_internal_springs_enabled );   
     ClassDB::bind_method(D_METHOD("set_shape_matching_enabled","value"), &QSoftBodyNode::set_shape_matching_enabled );   
     ClassDB::bind_method(D_METHOD("set_shape_matching_rate","value"), &QSoftBodyNode::set_shape_matching_rate );   
@@ -36,8 +38,10 @@ void QSoftBodyNode::_bind_methods() {
     ClassDB::bind_method(D_METHOD("set_particle_spesific_mass_enabled","value"), &QSoftBodyNode::set_particle_spesific_mass_enabled );   
 
     ADD_PROPERTY( PropertyInfo(Variant::REAL,"rigidity"), "set_rigidity","get_rigidity" );
-    ADD_PROPERTY( PropertyInfo(Variant::BOOL,"self_collision"), "set_self_collision_enabled","get_self_collision_enabled" );
     ADD_PROPERTY( PropertyInfo(Variant::BOOL,"passivation_of_internal_springs"), "set_passivation_of_internal_springs_enabled","get_passivation_of_internal_springs_enabled" );
+    ADD_GROUP("Self Collisions","");
+    ADD_PROPERTY( PropertyInfo(Variant::BOOL,"self_collision"), "set_self_collision_enabled","get_self_collision_enabled" );
+    ADD_PROPERTY( PropertyInfo(Variant::REAL,"self_collision_specified_radius"), "set_self_collisions_specified_radius","get_self_collisions_specified_radius" );
     ADD_GROUP("Area Preserving","");
     ADD_PROPERTY( PropertyInfo(Variant::BOOL,"area_preserving"), "set_area_preserving_enabled","get_area_preserving_enabled" );
     ADD_PROPERTY( PropertyInfo(Variant::REAL,"area_preserving_rate"), "set_area_preserving_rate","get_area_preserving_rate" );
@@ -81,6 +85,11 @@ float QSoftBodyNode::get_target_preservation_area() {
 bool QSoftBodyNode::get_self_collision_enabled() {
 	QSoftBody *sb=static_cast<QSoftBody*>(bodyObject);
     return sb->GetSelfCollisionsEnabled();
+}
+
+float QSoftBodyNode::get_self_collisions_specified_radius() {
+    QSoftBody *sb=static_cast<QSoftBody*>(bodyObject);
+	return sb->GetSelfCollisionsSpecifiedRadius();
 }
 
 bool QSoftBodyNode::get_passivation_of_internal_springs_enabled() {
@@ -160,6 +169,12 @@ QSoftBodyNode *QSoftBodyNode::set_self_collision_enabled(bool value) {
 	QSoftBody *sb=static_cast<QSoftBody*>(bodyObject);
     sb->SetSelfCollisionsEnabled(value);
     return this;
+}
+
+QSoftBodyNode *QSoftBodyNode::set_self_collisions_specified_radius(float value) {
+    QSoftBody *sb=static_cast<QSoftBody*>(bodyObject);
+    sb->SetSelfCollisionsSpecifiedRadius(value);
+	return this;
 }
 
 QSoftBodyNode *QSoftBodyNode::set_passivation_of_internal_springs_enabled(bool value) {

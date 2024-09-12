@@ -30,12 +30,14 @@
 
 #include "QuarkPhysics/qworld.h"
 #include "QuarkPhysics/qbody.h"
+#include "QuarkPhysics/extensions/qspatialhashing.h"
 #include "scene/2d/node_2d.h"
 #include "qbody_node.h"
 #include "qrigidbody_node.h"
 #include "qjoint_object.h"
 #include "qspring_object.h"
 #include "qraycast_object.h"
+
 
 
 class QWorldNode: public Node2D{
@@ -45,12 +47,15 @@ class QWorldNode: public Node2D{
     vector<QJointObject*> jointObjects;
     vector<QSpringObject*> springObjects;
     vector<QRaycastObject*> raycastObjects;
+    QSpatialHashing *spatialHashing=nullptr;
+    bool enableSpatialHashing=false;
+    float cellSize=128.0;
     bool enableDebugRenderer=true;
     void set_debug_renderer_enabled(bool value);
     bool get_debug_renderer_enabled();
 protected:
     void _notification(int what);
-    void on_process();
+    void on_physics_process();
     void on_ready();
     static void _bind_methods();
 
@@ -58,15 +63,16 @@ public:
     QWorldNode(){
         worldObject=new QWorld();
         set_process(true);
+        set_physics_process(true);
+        spatialHashing=new QSpatialHashing(worldObject->bodies,cellSize);
     };
     ~QWorldNode(){
         if(worldObject!=nullptr){
-            //Removing 
-            worldObject->ClearJoints(true);
-            worldObject->ClearSprings(true);
-            worldObject->ClearRaycasts(true);
             delete worldObject;
             worldObject=nullptr;
+        }
+        if (spatialHashing!=nullptr){
+            delete spatialHashing;
         }
     };
 
@@ -92,11 +98,11 @@ public:
     };
 
     bool get_spatial_hashing_enabled(){
-        return worldObject->GetSpatialHashingEnabled();
+        return enableSpatialHashing;
     };
 
     float get_spatial_hashing_cell_size(){
-        return worldObject->GetSpatialHashingCellSize();
+        return cellSize;
     }
 
     int get_iteration_count(){
@@ -135,12 +141,21 @@ public:
         return this;
     };
     QWorldNode *set_spatial_hashing_enabled(bool value){
-        worldObject->SetSpatialHashingEnabled(value);
+        if (value==true){
+            worldObject->SetBroadphase(spatialHashing);
+        }else{
+            worldObject->SetBroadphase(nullptr);
+        }
+        enableSpatialHashing=value;
         return this;
     };
 
     QWorldNode *set_spatial_hashing_cell_size(float value){
-        worldObject->SetSpatialHashingCellSize(value);
+        if (value!=cellSize){
+            if (spatialHashing!=nullptr){
+                spatialHashing->SetCellSize(value);
+            }
+        }
         return this;
     }
     QWorldNode *set_iteration_count(int value){

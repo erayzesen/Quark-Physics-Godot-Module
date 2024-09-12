@@ -11,8 +11,9 @@ void QRaycastObject::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_rotation","value"),&QRaycastObject::set_rotation );
 	ClassDB::bind_method(D_METHOD("set_ray_vector","value"),&QRaycastObject::set_ray_vector );
 	ClassDB::bind_method(D_METHOD("set_containing_bodies_enabled","value"),&QRaycastObject::set_containing_bodies_enabled );
+	ClassDB::bind_method(D_METHOD("set_collidable_layers_bit","value"),&QRaycastObject::set_collidable_layers_bit );
 
-	ClassDB::bind_method(D_METHOD("configure","position","ray_vector","enable_containing_bodies"),&QRaycastObject::configure );
+	ClassDB::bind_method(D_METHOD("configure","position","ray_vector","enable_containing_bodies","collidable_layers"),&QRaycastObject::configure );
 	ClassDB::bind_method(D_METHOD("get_contacts"),&QRaycastObject::get_contacts );
 
 
@@ -36,6 +37,10 @@ bool QRaycastObject::get_containing_bodies_enabled() {
 	return raycastObject->GetEnabledContainingBodies();
 }
 
+int QRaycastObject::get_collidable_layers_bit() {
+	return raycastObject->GetCollidableLayersBit();
+}
+
 //Set
 
 QRaycastObject *QRaycastObject::set_position(Vector2 value) {
@@ -55,6 +60,11 @@ QRaycastObject *QRaycastObject::set_ray_vector(Vector2 value) {
 
 QRaycastObject *QRaycastObject::set_containing_bodies_enabled(bool value) {
 	raycastObject->SetEnabledContainingBodies(value);
+	return this;
+}
+
+QRaycastObject *QRaycastObject::set_collidable_layers_bit(int value) {
+	raycastObject->SetCollidableLayersBit(value);
 	return this;
 }
 

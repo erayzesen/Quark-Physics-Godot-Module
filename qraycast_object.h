@@ -51,21 +51,24 @@ public:
             delete raycastObject;
     };
 
-    QRaycastObject * configure(Vector2 position, Vector2 ray_vector, bool enable_containing_bodies=false){
+    QRaycastObject * configure(Vector2 position, Vector2 ray_vector, bool enable_containing_bodies=false,int collidable_layers=1){
         set_position(position);
         set_ray_vector(ray_vector);
         set_containing_bodies_enabled(enable_containing_bodies);
+        set_collidable_layers_bit(collidable_layers);
     };
     
     Vector2 get_position();
     float get_rotation();
     Vector2 get_ray_vector();
     bool get_containing_bodies_enabled();
+    int get_collidable_layers_bit();
 
     QRaycastObject* set_position(Vector2 value);
     QRaycastObject* set_rotation(float value);
     QRaycastObject* set_ray_vector(Vector2 value);
     QRaycastObject* set_containing_bodies_enabled(bool value);
+    QRaycastObject* set_collidable_layers_bit(int value);
 
     Array get_contacts();
     

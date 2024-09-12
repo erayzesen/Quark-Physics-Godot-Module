@@ -11,9 +11,9 @@ void QWorldNode::_notification(int what) {
 		if(Engine::get_singleton()->is_editor_hint()==false)
         	on_ready();
         break;
-    case NOTIFICATION_PROCESS:
+    case NOTIFICATION_PHYSICS_PROCESS:
 		if(Engine::get_singleton()->is_editor_hint()==false)
-        	on_process();
+        	on_physics_process();
 		break;
 	
 	case NOTIFICATION_DRAW:
@@ -46,17 +46,17 @@ Array QWorldNode::get_collisions(Object *bodyA, Object *bodyB) {
 	}
 	auto contacts=worldObject->GetCollisions(qbodyA->bodyObject,qbodyB->bodyObject);
 	for(int i=0;i<contacts.size();i++){
-		QCollision::Contact oc=contacts[i];
+		QCollision::Contact *oc=contacts[i];
 		Dictionary c;
-		c["position"]=Vector2(oc.position.x,oc.position.y);
-		c["normal"]=Vector2(oc.normal.x,oc.normal.y);
-		c["penetration"]=oc.penetration;
-		QBodyNode *particleBodyNode=get_body_node_with_object(oc.particle->GetOwnerMesh()->GetOwnerBody() );
-		QMeshNode *particleMeshNode=particleBodyNode->get_mesh_node_with_object( oc.particle->GetOwnerMesh() );
-		c["particle"]=particleMeshNode->get_particle_object_with_object(oc.particle);
+		c["position"]=Vector2(oc->position.x,oc->position.y);
+		c["normal"]=Vector2(oc->normal.x,oc->normal.y);
+		c["penetration"]=oc->penetration;
+		QBodyNode *particleBodyNode=get_body_node_with_object(oc->particle->GetOwnerMesh()->GetOwnerBody() );
+		QMeshNode *particleMeshNode=particleBodyNode->get_mesh_node_with_object( oc->particle->GetOwnerMesh() );
+		c["particle"]=particleMeshNode->get_particle_object_with_object(oc->particle);
 		Array refParticles;
-		for(int n=0;n<oc.referenceParticles.size();n++){
-			QParticle *p=oc.referenceParticles[n];
+		for(int n=0;n<oc->referenceParticles.size();n++){
+			QParticle *p=oc->referenceParticles[n];
 			QBodyNode *pBodyNode=get_body_node_with_object(p->GetOwnerMesh()->GetOwnerBody() );
 			QMeshNode *pMeshNode=pBodyNode->get_mesh_node_with_object( p->GetOwnerMesh() );
 			QParticleObject *pObj=pMeshNode->get_particle_object_with_object(p);
@@ -379,7 +379,7 @@ Array QWorldNode::raycast_to(Vector2 position,Vector2 ray_vector,int collidable_
 
 
 
-void QWorldNode::on_process() {
+void QWorldNode::on_physics_process() {
 	update_world();
 	update();
 	//Update rigid body node positions and rotations according to the own physics object

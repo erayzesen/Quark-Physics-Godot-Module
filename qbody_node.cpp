@@ -78,8 +78,6 @@ void QBodyNode::_bind_methods() {
      ClassDB::bind_method(D_METHOD("get_air_friction"),&QBodyNode::get_air_friction );
      ClassDB::bind_method(D_METHOD("get_mass"),&QBodyNode::get_mass );
      ClassDB::bind_method(D_METHOD("get_restitution"),&QBodyNode::get_restitution );
-     ClassDB::bind_method(D_METHOD("get_force"),&QBodyNode::get_force );
-     ClassDB::bind_method(D_METHOD("get_angular_force"),&QBodyNode::get_angular_force );
      ClassDB::bind_method(D_METHOD("get_body_specific_time_scale_enabled"),&QBodyNode::get_body_specific_time_scale_enabled );
      ClassDB::bind_method(D_METHOD("get_body_specific_time_scale"),&QBodyNode::get_body_specific_time_scale );
      ClassDB::bind_method(D_METHOD("get_enabled"),&QBodyNode::get_enabled );
@@ -93,10 +91,6 @@ void QBodyNode::_bind_methods() {
      ClassDB::bind_method(D_METHOD("set_body_rotation_degree","angle_radian","with_previous_rotation"),&QBodyNode::set_body_rotation_degree );
      ClassDB::bind_method(D_METHOD("add_body_rotation","angle_radian"),&QBodyNode::add_body_rotation );
      ClassDB::bind_method(D_METHOD("set_body_previous_rotation","angle_radian"),&QBodyNode::set_body_previous_rotation );
-     ClassDB::bind_method(D_METHOD("set_force","value"),&QBodyNode::set_force );
-     ClassDB::bind_method(D_METHOD("add_force","value"),&QBodyNode::add_force );
-     ClassDB::bind_method(D_METHOD("set_angular_force","value"),&QBodyNode::set_angular_force );
-     ClassDB::bind_method(D_METHOD("add_angular_force","value"),&QBodyNode::add_angular_force );
      ClassDB::bind_method(D_METHOD("set_layers_bit","value"),&QBodyNode::set_layers_bit );
      ClassDB::bind_method(D_METHOD("set_collidable_layers_bit","value"),&QBodyNode::set_collidable_layers_bit );
      ClassDB::bind_method(D_METHOD("set_can_sleep","value"),&QBodyNode::set_can_sleep );
@@ -109,6 +103,7 @@ void QBodyNode::_bind_methods() {
      ClassDB::bind_method(D_METHOD("set_body_spesific_time_scale_enabled","value"),&QBodyNode::set_body_spesific_time_scale_enabled );
      ClassDB::bind_method(D_METHOD("set_body_spesific_time_scale","value"),&QBodyNode::set_body_spesific_time_scale );
      ClassDB::bind_method(D_METHOD("set_enabled","value"),&QBodyNode::set_enabled );
+     ClassDB::bind_method(D_METHOD("wake_up"),&QBodyNode::wake_up );
 
      ClassDB::bind_method(D_METHOD("add_mesh_node","mesh_node"),&QBodyNode::add_mesh_node );
      ClassDB::bind_method(D_METHOD("remove_mesh_node_at","index"),&QBodyNode::remove_mesh_node_at );
@@ -250,14 +245,7 @@ float QBodyNode::get_restitution() {
 	return bodyObject->GetRestitution();
 }
 
-Vector2 QBodyNode::get_force() {
-    QVector value=bodyObject->GetForce();
-	return Vector2(value.x,value.y);
-}
 
-float QBodyNode::get_angular_force() {
-	return bodyObject->GetAngularForce();
-}
 
 bool QBodyNode::get_body_specific_time_scale_enabled() {
 	return bodyObject->GetBodySpecificTimeScaleEnabled();
@@ -318,27 +306,7 @@ QBodyNode *QBodyNode::add_body_previous_rotation(float angle_radian) {
 	return this;
 }
 
-QBodyNode *QBodyNode::set_force(Vector2 value) {
-	bodyObject->SetForce( QVector(value.x,value.y) );
-	return this;
-}
 
-QBodyNode *QBodyNode::add_force(Vector2 value) {
-	bodyObject->AddForce( QVector(value.x,value.y) );
-	return this;
-}
-
-
-
-QBodyNode *QBodyNode::set_angular_force(float value) {
-	bodyObject->SetAngularForce(value);
-	return this;
-}
-
-QBodyNode *QBodyNode::add_angular_force(float value) {
-	bodyObject->AddAngularForce(value);
-	return this;
-}
 
 QBodyNode *QBodyNode::set_layers_bit(int value) {
 	bodyObject->SetLayersBit(value);
@@ -403,6 +371,11 @@ QBodyNode *QBodyNode::set_body_spesific_time_scale(float value) {
 QBodyNode *QBodyNode::set_enabled(bool value) {
     bodyObject->SetEnabled(value);
     update_meshes_draw();
+	return this;
+}
+
+QBodyNode *QBodyNode::wake_up() {
+    bodyObject->WakeUp();
 	return this;
 }
 

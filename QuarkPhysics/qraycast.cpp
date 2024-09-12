@@ -49,8 +49,13 @@ vector<QBody *> QRaycast::GetPotentialBodies(QWorld *whichWorld, QVector rayPosi
 
 	for(int i=0;i<whichWorld->GetBodyCount();i++){
 		QBody* body=whichWorld->GetBodyAt(i);
+		
 		if(body->GetEnabled()==false )
 			continue;
+		
+		if ( (collidableLayers & body->GetLayersBit()) ==0 )
+			continue;
+	
 		if(isRayToNegativeX){
 			if(body->GetAABB().GetMin().x>rayPosition.x || body->GetAABB().GetMax().x<rayEndPosition.x){
 				continue;
@@ -70,6 +75,7 @@ vector<QBody *> QRaycast::GetPotentialBodies(QWorld *whichWorld, QVector rayPosi
 				continue;
 			}
 		}
+		
 		res.push_back(body);
 	}
 	return res;
@@ -80,7 +86,7 @@ vector<QBody *> QRaycast::GetPotentialBodies(QWorld *whichWorld, QVector rayPosi
 void QRaycast::UpdateContacts()
 {
 	if(world==nullptr)return;
-	contacts=RaycastTo(world,position,ray,1,enabledContainingBodies);
+	contacts=RaycastTo(world,position,ray,collidableLayersBit,enabledContainingBodies);
 }
 
 
@@ -129,6 +135,10 @@ bool QRaycast::GetEnabledContainingBodies()
 	return enabledContainingBodies;
 }
 
+int QRaycast::GetCollidableLayersBit()
+{
+    return collidableLayersBit;
+}
 
 
 float QRaycast::GetRotation()
@@ -160,6 +170,12 @@ QRaycast *QRaycast::SetEnabledContainingBodies(bool value)
 {
 	enabledContainingBodies=value;
 	return this;
+}
+
+QRaycast *QRaycast::SetCollidableLayersBit(int value)
+{
+	collidableLayersBit=value;	
+    return this;
 }
 
 void QRaycast::RaycastToParticles(QBody *body, QMesh *mesh, QVector rayPosition, QVector rayVector, QVector rayUnit, QVector rayNormal, bool enableContainingBodies,vector<QRaycast::Contact> *contacts)
@@ -242,6 +258,7 @@ void QRaycast::RaycastToPolygon(QBody *body, QMesh *mesh, QVector rayPosition, Q
 		//It's a containing body
 		if(enableContainingBodies){
 			nearContactPosition=rayPosition;
+			nearDistance=0.0f;
 
 		}else{
 			return;

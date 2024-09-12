@@ -25,26 +25,5 @@
  *
 **************************************************************************************/
 
-#include "qbroadphase.h"
-#include <iostream>
-#include <algorithm>
-#include "qworld.h"
-#include "qaabb.h"
-#include "qworld.h"
+#include "qobjectpool.h"
 
-void QBroadPhase::Clear()
-{
-}
-
-std::unordered_set<pair<QBody*, QBody*>,QBody::BodyPairHash,QBody::BodyPairEqual> &QBroadPhase::GetPairs()
-{
-    return pairs;
-}
-
-void QBroadPhase::Insert(QBody *body)
-{
-}
-
-void QBroadPhase::Remove(QBody *body)
-{
-}

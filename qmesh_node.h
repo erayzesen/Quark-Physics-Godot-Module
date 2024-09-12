@@ -58,6 +58,7 @@ protected:
     bool enableStroke=false;
     float strokeWidth=3.0f;
     Color strokeColor=Color::named("black");
+    Curve2D *curvedPolygon=new Curve2D();
 
 
     //Collections
@@ -91,10 +92,13 @@ public:
     float get_initial_area();
     float get_initial_polygons_area();
     float get_area();
-    float get_polygons_area();
+    float get_polygon_area();
     float get_circumference();
     bool get_springs_enabled();
     bool get_polygons_enabled();
+    Array get_average_position_and_rotation(Array particle_collection);
+    Array get_matching_particle_positions(Array particle_collection,Vector2 target_position,float target_rotation);
+    float get_min_angle_constraint_of_polygon();
 
     QBodyNode *get_owner_body_node();
 
@@ -104,6 +108,7 @@ public:
     QMeshNode *set_mesh_rotation(float value);
     QMeshNode *set_springs_enabled(bool value);
     QMeshNode *set_polygons_enabled(bool value);
+    QMeshNode *set_min_angle_constraint_of_polygon(bool value);
     
 
     //Particle Operations
@@ -130,7 +135,15 @@ public:
     QMeshNode *remove_particle_from_polygon_at(int index);
     QMeshNode *remove_polygon();
     QParticleObject *get_particle_from_polygon(int index);
+
     int get_polygon_particle_count();
+    Array get_decomposited_polygon();
+
+    //Render helper operations
+    PoolVector2Array get_curved_polygon_points(float curve_amount,float margin=0,Vector2 origin=Vector2(0,0),float bake_interval=5.0f);
+    Vector<Vector2> get_inner_shadow_of_polygon(Vector<Vector2> polygon_points,Vector2 offset);
+    Vector<Vector2> get_specified_side_points_of_polygon(Vector<Vector2> polygon_points,Vector2 axis,int points_count_range,float scale=1.0, Vector2 origin=Vector2(0,0));
+
 
     //Rendering Features
     bool get_vector_rendering_enabled(){

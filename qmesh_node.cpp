@@ -2,6 +2,7 @@
 #include "qbody_node.h"
 #include "qrenderer.h"
 #include "core/math/triangulate.h"
+#include "core/math/geometry.h"
 
 void QMeshNode::_notification(int what) {
     switch (what){
@@ -240,7 +241,7 @@ void QMeshNode::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_initial_area"),&QMeshNode::get_initial_area );
     ClassDB::bind_method(D_METHOD("get_initial_polygons_area"),&QMeshNode::get_initial_polygons_area );
     ClassDB::bind_method(D_METHOD("get_area"),&QMeshNode::get_area );
-    ClassDB::bind_method(D_METHOD("get_polygons_area"),&QMeshNode::get_polygons_area );
+    ClassDB::bind_method(D_METHOD("get_polygon_area"),&QMeshNode::get_polygon_area );
     ClassDB::bind_method(D_METHOD("get_circumference"),&QMeshNode::get_circumference );
     ClassDB::bind_method(D_METHOD("get_owner_body_node"),&QMeshNode::get_owner_body_node );
     ClassDB::bind_method(D_METHOD("get_springs_enabled"),&QMeshNode::get_springs_enabled );
@@ -257,6 +258,8 @@ void QMeshNode::_bind_methods() {
     ClassDB::bind_method(D_METHOD("remove_particle_at","index"),&QMeshNode::remove_particle_at );
     ClassDB::bind_method(D_METHOD("get_particle","index"),&QMeshNode::get_particle );
     ClassDB::bind_method(D_METHOD("get_particle_count"),&QMeshNode::get_particle_count );
+    ClassDB::bind_method(D_METHOD("get_average_position_and_rotation","particle_collection"),&QMeshNode::get_average_position_and_rotation );
+    ClassDB::bind_method(D_METHOD("get_matching_particle_positions","particle_collection","target_position","target_rotation"),&QMeshNode::get_matching_particle_positions );
 
     //Spring Operations
     ClassDB::bind_method(D_METHOD("add_spring","spring_object"),&QMeshNode::add_spring );
@@ -273,7 +276,12 @@ void QMeshNode::_bind_methods() {
     ClassDB::bind_method(D_METHOD("remove_polygon"),&QMeshNode::remove_polygon );
     ClassDB::bind_method(D_METHOD("get_particle_from_polygon","index"),&QMeshNode::get_particle_from_polygon );
     ClassDB::bind_method(D_METHOD("get_polygon_particle_count"),&QMeshNode::get_polygon_particle_count );
+    ClassDB::bind_method(D_METHOD("get_min_angle_constraint_of_polygon"),&QMeshNode::get_min_angle_constraint_of_polygon );
+    ClassDB::bind_method(D_METHOD("set_min_angle_constraint_of_polygon","value"),&QMeshNode::set_min_angle_constraint_of_polygon );
+    ClassDB::bind_method(D_METHOD("get_decomposited_polygon"),&QMeshNode::get_decomposited_polygon );
 
+
+    
 
     //Rendering features
      ClassDB::bind_method(D_METHOD("get_vector_rendering_enabled"),&QMeshNode::get_vector_rendering_enabled );
@@ -284,6 +292,13 @@ void QMeshNode::_bind_methods() {
      ClassDB::bind_method(D_METHOD("get_stroke_enabled"),&QMeshNode::get_stroke_enabled );
      ClassDB::bind_method(D_METHOD("get_stroke_width"),&QMeshNode::get_stroke_width );
      ClassDB::bind_method(D_METHOD("get_stroke_color"),&QMeshNode::get_stroke_color );
+
+     //Render helper operations
+     ClassDB::bind_method(D_METHOD("get_curved_polygon_points","curve_amount","margin","origin","bake_interval"),&QMeshNode::get_curved_polygon_points );
+     ClassDB::bind_method(D_METHOD("get_inner_shadow_of_polygon","polygon_points","offset"),&QMeshNode::get_inner_shadow_of_polygon );
+     ClassDB::bind_method(D_METHOD("get_specified_side_points_of_polygon","polygon_points","axis","points_count_range","scale", "origin"),&QMeshNode::get_specified_side_points_of_polygon );
+
+     
 
      ClassDB::bind_method(D_METHOD("set_vector_rendering_enabled","value"),&QMeshNode::set_vector_rendering_enabled );
      ClassDB::bind_method(D_METHOD("set_antialias_enabled","value"),&QMeshNode::set_antialias_enabled );
@@ -340,7 +355,7 @@ float QMeshNode::get_area() {
 	return meshObject->GetArea();
 }
 
-float QMeshNode::get_polygons_area() {
+float QMeshNode::get_polygon_area() {
 	return meshObject->GetPolygonsArea();
 }
 
@@ -354,6 +369,60 @@ bool QMeshNode::get_springs_enabled() {
 
 bool QMeshNode::get_polygons_enabled() {
 	return enablePolygons;
+}
+
+Array QMeshNode::get_average_position_and_rotation(Array particle_collection) {
+    Array result;
+    vector<QParticle*> particleObjects;
+    for(int i=0;i<particle_collection.size();i++){
+        if(particle_collection.get(i).get_type()!=Variant::OBJECT){
+            print_error("Quark Physics Error: The element of the polygon array isn't a valid particle object type! | QMeshNode.add_polygon() ");
+            return result;
+        }
+        Object *element=particle_collection.get(i);
+        if(element->get_class()!="QParticleObject"){
+            print_error("Quark Physics Error: The element of the polygon array isn't a valid particle object type! | QMeshNode.add_polygon() ");
+            return result;
+        }
+        QParticleObject *pObj=static_cast<QParticleObject*>(element);
+        if(pObj!=nullptr){
+            particleObjects.push_back(pObj->particleObject);
+        }
+    }
+    pair<QVector,float> resultRaw=meshObject->GetAveragePositionAndRotation(particleObjects);
+    result.append(Vector2(resultRaw.first.x,resultRaw.first.y ));
+    result.append(resultRaw.second);
+    
+	return result;
+}
+
+Array QMeshNode::get_matching_particle_positions(Array particle_collection, Vector2 target_position, float target_rotation) {
+	Array result;
+    vector<QParticle*> particleObjects;
+    for(int i=0;i<particle_collection.size();i++){
+        if(particle_collection.get(i).get_type()!=Variant::OBJECT){
+            print_error("Quark Physics Error: The element of the polygon array isn't a valid particle object type! | QMeshNode.add_polygon() ");
+            return result;
+        }
+        Object *element=particle_collection.get(i);
+        if(element->get_class()!="QParticleObject"){
+            print_error("Quark Physics Error: The element of the polygon array isn't a valid particle object type! | QMeshNode.add_polygon() ");
+            return result;
+        }
+        QParticleObject *pObj=static_cast<QParticleObject*>(element);
+        if(pObj!=nullptr){
+            particleObjects.push_back(pObj->particleObject);
+        }
+    }
+    vector<QVector> resultRaw=meshObject->GetMatchingParticlePositions(particleObjects,QVector(target_position.x,target_position.y),target_rotation );
+    for(int i=0;i<resultRaw.size();++i ){
+        result.append(Vector2(resultRaw[i].x,resultRaw[i].y) );
+    }
+    return result;
+}
+
+float QMeshNode::get_min_angle_constraint_of_polygon() {
+	return meshObject->GetMinAngleConstraintOfPolygon();
 }
 
 QBodyNode * QMeshNode::get_owner_body_node(){
@@ -388,6 +457,10 @@ QMeshNode *QMeshNode::set_polygons_enabled(bool value) {
 	return this;
 }
 
+QMeshNode *QMeshNode::set_min_angle_constraint_of_polygon(bool value) {
+	meshObject->SetMinAngleConstraintOfPolygon(value);
+    return this;
+}
 
 //Particle Operations
 QMeshNode *QMeshNode::add_particle(Object *particle_object) {
@@ -604,7 +677,103 @@ int QMeshNode::get_polygon_particle_count() {
 	return polygon.size() ;
 }
 
+Array QMeshNode::get_decomposited_polygon() {
+    Vector<Vector2> polygonPoints;
+    for (size_t i=0;i<meshObject->GetPolygonParticleCount();++i ){
+        QVector p=meshObject->GetParticleFromPolygon(i)->GetGlobalPosition();
+        polygonPoints.push_back( Vector2(p.x,p.y) );
 
+    }
+
+    Vector<Vector<Vector2>> decompositedPolygon=Geometry::decompose_polygon_in_convex(polygonPoints);
+
+    Array result;
+
+    for(int i=0;i<decompositedPolygon.size();++i ){
+        Vector<Vector2> polyOrg=decompositedPolygon.get(i);
+        Array poly;
+        for(size_t n=0;n<polyOrg.size();++n ){
+            poly.append(polyOrg[n]);
+        }
+        result.append(poly);
+    }
+
+	return result;
+}
+
+PoolVector2Array QMeshNode::get_curved_polygon_points(float curve_amount,float margin,Vector2 origin,float bake_interval) {
+    PoolVector2Array res;
+    size_t polygonSize=polygon.size();
+    if(polygonSize<3 ){
+        return res;
+    }
+    curvedPolygon->clear_points();
+    Vector2 firstPoint;
+    Vector2 firstCurveVec;
+    curvedPolygon->set_bake_interval(bake_interval);
+	for (size_t i=0;i<polygonSize;++i ){
+        Vector2 pp=polygon[ (i-1+polygonSize) % polygonSize ]->get_global_position();
+        Vector2 cp=polygon[i]->get_global_position();
+        Vector2 np=polygon[ (i+1) % polygonSize ]->get_global_position();
+        Vector2 curveUnit=(np-pp).normalized();
+        Vector2 curveNormal=curveUnit.tangent();
+        Vector2 curveVec=curveUnit*curve_amount;
+
+        Vector2 finalPoint=(cp-origin)-curveNormal*margin; 
+
+        if(i==0){
+            firstPoint=finalPoint;
+            firstCurveVec=curveVec;
+        }
+
+        curvedPolygon->add_point(finalPoint,-curveVec,curveVec);
+    }
+    curvedPolygon->add_point(firstPoint,-firstCurveVec,firstCurveVec);
+    
+    return curvedPolygon->get_baked_points();
+}
+
+Vector<Vector2> QMeshNode::get_inner_shadow_of_polygon(Vector<Vector2> polygon_points,Vector2 offset) {
+    Vector<Vector2> clipVertices;
+    for (size_t i=0;i<polygon_points.size();++i ){
+        clipVertices.push_back(polygon_points[i]+offset);
+    }
+    
+    Vector<Vector<Vector2> > clippedPolygons=Geometry::clip_polygons_2d(polygon_points,clipVertices);
+    Vector<Vector2> shadowVertices;
+    if (clippedPolygons.size()>0 ){
+        shadowVertices=clippedPolygons[0];
+    }
+
+	return shadowVertices;
+}
+
+Vector<Vector2> QMeshNode::get_specified_side_points_of_polygon(Vector<Vector2> polygon_points, Vector2 axis, int points_count_range, float scale,Vector2 origin) {
+    Vector<Vector2> res;
+    size_t p_size=polygon_points.size();
+    if (p_size<3 ){
+        return res;
+    }
+    size_t extreme_point_index;
+    float max_dist=-INFINITY;
+    for (size_t i=0;i<p_size;++i ){
+        Vector2 p=polygon_points[i];
+        float dist=p.dot(axis);
+        if(dist>max_dist){
+            max_dist=dist;
+            extreme_point_index=i;
+        }
+    }
+    size_t current_index=(extreme_point_index-points_count_range+p_size)%p_size;
+    size_t end_index=(extreme_point_index+points_count_range)%p_size;
+    while (current_index!=end_index){
+        Vector2 p=( polygon_points[current_index]-origin )*scale+origin;
+        res.push_back(p);
+        current_index=(current_index+1)%p_size;
+    }
+
+	return res;
+}
 
 QMeshNode *QMeshNode::type_cast(Object *obj) {
 	Node2D *node=Object::cast_to<Node2D>(obj);

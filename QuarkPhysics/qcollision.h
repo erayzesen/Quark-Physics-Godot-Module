@@ -30,8 +30,11 @@
 #include <iostream>
 #include <vector>
 #include "qparticle.h"
+#include "qobjectpool.h"
+
 
 class QWorld;
+class QAABB;
 using namespace std;
 
 
@@ -40,7 +43,10 @@ using namespace std;
 class QCollision
 {
 public:
-	QCollision();;
+	QCollision(){}
+	~QCollision();
+
+	
 
 
 	/** @brief Contains all the contact information required to resolve collisions. */
@@ -67,10 +73,26 @@ public:
 			this->solved=false;
 		}
 
+		Contact(){
+
+		}
+
+		void Configure(QParticle *particle,QVector position,QVector normal,float penetration,vector<QParticle*> referenceParticles){
+			this->particle=particle;
+			this->position=position;
+			this->normal=normal;
+			this->penetration=penetration;
+			this->referenceParticles=referenceParticles;
+			this->solved=false;
+		}
+
 
 
 	};
 
+	static QObjectPool<QCollision::Contact> contactPool;
+
+	static QObjectPool<QCollision::Contact> &GetContactPool();
 
 
 	struct Project{
@@ -97,25 +119,27 @@ public:
 
 	};
 
+	
+
 	//Collision Methods
 	/** Checks collisions between polygons. 
 	 * @param particlesA A collection of particles that make up a polygon.
 	 * @param particlesB Another collection of particles that make up a polygon.
 	 * @param contacts A collection where collision contact information will be stored.
 	 */
-	static void PolygonAndPolygon(vector<QParticle*> &particlesA,vector<QParticle*> &particlesB,vector<QCollision::Contact> &contacts);
+	static void PolygonAndPolygon(vector<QParticle*> &particlesA,vector<QParticle*> &particlesB,vector<QCollision::Contact*> &contacts);
 	/** Checks collisions between circle(s) and polygon. 
 	 * @param particlesA A collection of particles representing one or more circles, each having a radius.
 	 * @param particlesB A collection of particles that make up a polygon.
 	 * @param contacts A collection where collision contact information will be stored.
 	 */
-	static void CircleAndPolygon(vector<QParticle*> &circleParticles,vector<QParticle*> &polygonParticles,vector<QCollision::Contact> &contacts);
+	static void CircleAndPolygon(vector<QParticle*> &circleParticles,vector<QParticle*> &polygonParticles,vector<QCollision::Contact*> &contacts);
 	/** Checks collisions between circle(s) and circle(s). 
 	 * @param particlesA A collection of particles representing one or more circles, each having a radius.
 	 * @param particlesB Another collection of particles representing one or more circles, each having a radius.
 	 * @param contacts A collection where collision contact information will be stored.
 	 */
-	static void CircleAndCircle(vector<QParticle*> &particlesA,vector<QParticle*> &particlesB,vector<QCollision::Contact> &contacts, float specifiedRadius=0.0f);
+	static void CircleAndCircle(vector<QParticle*> &particlesA,vector<QParticle*> &particlesB, QAABB boundingBoxB, vector<QCollision::Contact*> &contacts, float specifiedRadius=0.0f);
 	/** Checks collisions between polyline and polygon. 
 	 * @param polylineParticles A collection of particles that make up a polyline.
 	 * @param polygonParticles Another collection of particles that make up a polygon.
@@ -123,14 +147,16 @@ public:
 	 * \note To check collisions between two polylines, call this method twice with the polylines swapped as arguments.
 	 * \note "Polyline" is commonly used to define polygons for softbody objects. In contrast to a solid and filled polygon , you can think of a polyline as a polygon shape formed by a  connected and knotted rope. If a polygon-shaped rope is deformed, it may not always remain a polygon, it can overlap and its corners can merge. Collision testing for a polyline is performed based on these assumptions
 	 */
-	static void PolylineAndPolygon(vector<QParticle*> &polylineParticles,vector<QParticle*> &polygonParticles,vector<QCollision::Contact> &contacts);
+	static void PolylineAndPolygon(vector<QParticle*> &polylineParticles,vector<QParticle*> &polygonParticles,vector<QCollision::Contact*> &contacts);
 
 	/** Checks collisions between circles and polyline. 
 	 * @param circleParticles A collection of particles representing one or more circles, each having a radius.
 	 * @param polylineParticles A collection of particles that make up a polyline.
+	 * @param polylineAABB AABB of polyline for tests between circle and AABB.
 	 * @param contacts A collection where collision contact information will be stored.
+	 * @param circlesArePolygon It defines whether circle particles is the part of a polygon.  
 	 */
-	static void CircleAndPolyline(vector<QParticle*> &circleParticles,vector<QParticle*> &polylineParticles,vector<QCollision::Contact> &contacts);
+	static void CircleAndPolyline(vector<QParticle*> &circleParticles,vector<QParticle*> &polylineParticles,QAABB polylineAABB , vector<QCollision::Contact*> &contacts, bool circlesArePolygon=false);
 
 
 	//Geometry Helper Methods
@@ -160,18 +186,22 @@ public:
 	 * @return Returns true if the point is inside the polygon, false otherwise.
 	 */
 	static bool PointInPolygon2(QVector point, vector<QParticle*> &polygon );
+
+	
+	
 private:
 
 	//Collision Helper Methods
-	static void ClipContactParticles(QParticle *referenceParticles[], QParticle *incidentParticles[], vector<QCollision::Contact> &contacts );
+	static void ClipContactParticles(QParticle *referenceParticles[], QParticle *incidentParticles[], vector<QCollision::Contact*> &contacts );
 	static Project ProjectToAxis(QVector &normal,vector<QParticle*> &polygon);
 	static pair<int,int> FindNearestSideOfPolygon(const QVector point, vector<QParticle*> polygonParticles,bool checkSideRange=false);
 	static int FindNearestParticleOfPolygon(QParticle * particle, vector<QParticle*> polygonParticles);
+	static int FindExtremeParticleOfAxis(vector<QParticle*> polygonParticles, QVector axisNormal);
 	static bool PointInPolygonWN(const QVector point, vector<QParticle*> polygonParticles);
 
 
-
 };
+
 
 
 

@@ -50,6 +50,8 @@ public:
     bool get_fixed_rotation_enabled();
     bool get_kinematic_enabled();
     bool get_kinematic_collisions_enabled();
+    Vector2 get_force();
+    float get_angular_force();
     //Set Methods
     QRigidBodyNode *set_fixed_rotation_enabled(bool value);
     QRigidBodyNode *set_kinematic_enabled(bool value);
@@ -58,6 +60,13 @@ public:
     QRigidBodyNode *set_body_position_and_collide(Vector2 value, bool with_previous_position=true);
     QRigidBodyNode *apply_force(Vector2 value,Vector2 r, bool update_mesh_transforms=true);
     QRigidBodyNode *apply_impulse(Vector2 value,Vector2 r);
+    QRigidBodyNode *set_force(Vector2 value);
+
+    QRigidBodyNode *add_force(Vector2 value);
+
+    QRigidBodyNode *set_angular_force(float value);
+
+    QRigidBodyNode *add_angular_force(float value);
 
     
 

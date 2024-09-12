@@ -64,6 +64,21 @@ public:
 		RIGID_BODY
 	};
 
+	struct BodyPairHash {
+		size_t operator()(const std::pair<QBody*, QBody*>& p) const {
+			std::size_t h1 = std::hash<QBody*>{}(p.first);
+			std::size_t h2 = std::hash<QBody*>{}(p.second);
+			return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+		}
+	};
+
+	struct BodyPairEqual {
+		bool operator()(const std::pair<QBody*, QBody*>& p1, const std::pair<QBody*, QBody*>& p2) const {
+			return (p1.first == p2.first && p1.second == p2.second) ||
+				(p1.first == p2.second && p1.second == p2.first);
+		}
+	};
+
 protected:
 
 	//General Properties
@@ -74,13 +89,9 @@ protected:
 	float rotation=0.0f;
 	float prevRotation=0.0f;
 	QAABB aabb;
-	QAABB spatialContainerAABB;
-	QAABB fattedAABB;
 	Modes mode=QBody::Modes::DYNAMIC;
 	bool inertiaNeedsUpdate=true;
 	bool circumferenceNeedsUpdate=true;
-	QVector force=QVector::Zero();
-	float angularForce=0.0f;
 	bool enableBodySpecificTimeScale=false;
 	float bodySpecificTimeScale=1.0f;
 	BodyTypes bodyType=BodyTypes::RIGID;
@@ -162,12 +173,12 @@ protected:
 
 
 
+		//General Get Methods
 
 		/** Returns the type of the body. */
 		BodyTypes GetBodyType(){
 			return bodyType;
 		}
-		//General Get Methods
 		/** Returns the world. */
 		QWorld *GetWorld(){
 			return world;
@@ -196,10 +207,7 @@ protected:
 		QAABB GetAABB()const{
 			return aabb;
 		}
-		/** Returns the fattened AABB feature of the body. */
-		QAABB GetFattedAABB()const{
-			return fattedAABB;
-		}
+		
 		/** Returns the total initial area of the body. Initial area means the calculated total area with non-transformed meshes of the body. */
 		float GetTotalInitialArea(){
 			float res=0.0f;
@@ -240,7 +248,7 @@ protected:
 		float GetInertia(){
 			if(inertiaNeedsUpdate==true){
 				inertia=GetTotalInitialArea()*2.0f*mass;
-				inertia=inertia==0.0f ? 0.25:inertia;
+				inertia=inertia<500.0f ? 500.0f:inertia;
 				inertiaNeedsUpdate=false;
 			}
 			return inertia;
@@ -318,14 +326,7 @@ protected:
 
 			return circumference;
 		}
-		/** Returns the current force value of the body. */
-		QVector GetForce(){
-			return force;
-		}
-		/** Returns the current angular force value of the body. */
-		float GetAngularForce(){
-			return angularForce;
-		}
+		
 		/** Returns whether the body spesific time scale is enabled. */
 		bool GetBodySpecificTimeScaleEnabled(){
 			return enableBodySpecificTimeScale;
@@ -402,22 +403,7 @@ protected:
 		QBody * SetRotationDegree(float degree, bool withPreviousRotation=true){
 			return SetRotation( degree*(M_PI/180.0f),withPreviousRotation );
 		}
-		/** Sets the force value of the body. Set forces determine the force to be applied to a body object at the next physics step from the current step. 
-		 * @param value A value to set. 
-		 * @return A pointer to the body itself.
-		 */
-		QBody *SetForce(QVector value){
-			force=value;
-			return this;
-
-		}
-		/** Adds a vector to the force value of the body. Set forces determine the force to be applied to a body object at the next physics step from the current step. 
-		 * @param value A value to add. 
-		 * @return A pointer to the body itself.
-		 */
-		QBody *AddForce(QVector value){
-			return SetForce(GetForce()+value);
-		}
+		
 		/** Adds a value to the rotation of the body. 
 		 * @param angleRadian A value to add, in radians. 
 		 * @return A pointer to the body itself.
@@ -440,21 +426,7 @@ protected:
 		QBody *AddPreviousRotation(float angleRadian){
 			return SetPreviousRotation(GetPreviousRotation()+angleRadian);
 		}
-		/** Sets the angular force of the body. 
-		 * @param value A value to set. 
-		 * @return A pointer to the body itself.
-		 */
-		QBody *SetAngularForce(float value){
-			angularForce=value;
-			return this;
-		}
-		/** Adds a value to the angular force of the body. 
-		 * @param value A value to add. 
-		 * @return A pointer to the body itself.
-		 */
-		QBody *AddAngularForce(float value){
-			return SetAngularForce(GetAngularForce()+value);
-		}
+		
 		
 
 
@@ -572,9 +544,8 @@ protected:
 		 */
 		QBody *SetEnabled(bool value){
 			enabled=true;
+			return this;
 		}
-
-		
 
 
 		//Mesh Methods
@@ -604,6 +575,17 @@ protected:
 		QBody * AddMeshesFromFile(string filePath);
 
 
+		//Methods About the Sleeping Feature
+		/**
+		 * Wakes up a body that is in a sleeping state.
+		 * @return A pointer to the body itself.
+		 */
+		QBody* WakeUp() {
+			isSleeping = false;
+			return this;
+		}
+
+
 		friend class QMesh;
 		friend class QWorld;
 		friend class QManifold;
@@ -615,7 +597,7 @@ protected:
 		vector<QMesh*> _meshes=vector<QMesh*>();
 		SimulationModels simulationModel=SimulationModels::RIGID_BODY;
 		static QVector ComputeFriction(QBody *bodyA, QBody *bodyB, QVector &normal, float penetration, QVector &relativeVelocity);
-		static bool CanCollide(QBody *bodyA,QBody *bodyB);
+		static bool CanCollide(QBody *bodyA,QBody *bodyB,bool checkBodiesAreEnabled=true);
 
 
 };

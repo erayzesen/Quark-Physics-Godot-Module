@@ -6,3 +6,4 @@ env_qp = env.Clone()
 env_qp.add_source_files(env.modules_sources, "*.cpp") # Add all cpp files to the build
 env_qp.add_source_files(env.modules_sources, "QuarkPhysics/*.cpp") # Add all cpp files to the build
 env_qp.add_source_files(env.modules_sources, "QuarkPhysics/json/*.cpp") # Add all cpp files to the build
+env_qp.add_source_files(env.modules_sources, "QuarkPhysics/extensions/*.cpp") # Add all cpp files to the build

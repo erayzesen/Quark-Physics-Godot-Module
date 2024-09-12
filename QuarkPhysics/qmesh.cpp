@@ -33,6 +33,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include "qcollision.h"
+#include "qworld.h"
 
 
 QMesh::QMesh(){
@@ -42,7 +44,16 @@ QMesh::~QMesh()
 {
 	for(int i=0;i<particles.size();i++){
 		delete particles[i];
+		particles[i]=nullptr;
 	}
+	particles.clear();
+
+	for(int i=0;i<springs.size();i++){
+		delete springs[i];
+		springs[i]=nullptr;
+	}
+	springs.clear();
+
 }
 
 void QMesh::UpdateCollisionBehavior()
@@ -183,12 +194,135 @@ void QMesh::UpdateSubConvexPolygons()
 	subConvexPolygons.clear();
 	if (CheckIsPolygonConcave(polygon)==true ){
 		DecompositePolygon(polygon,subConvexPolygons);
-		cout<<"polygon is concave"<<endl;
+		// cout<<"polygon is concave"<<endl;
 	}else{
 		subConvexPolygons.push_back( polygon );
-		cout<<"polygon is convex"<<endl;
+		// cout<<"polygon is convex"<<endl;
 	}
 	
+}
+
+
+
+void QMesh::ApplyAngleConstraintsToPolygon()
+{
+	if(minAngleConstraintOfPolygon==0.0f){
+		return;
+	}
+
+	//Intersection Test
+	bool polygonIntersection=false;
+	for(int i=0;i<polygon.size();++i ){
+		int ni=(i+1)%polygon.size();
+		QParticle* d1A=polygon[i];
+		QParticle* d1B=polygon[ (i+1)%polygon.size() ];
+		for(int n=i+1;n<polygon.size();++n ){
+			if(n==i || n==ni || n==(i-1+polygon.size())%polygon.size() )continue;
+			QParticle* d2A=polygon[n];
+			QParticle* d2B=polygon[ (n+1)%polygon.size() ];
+
+			QVector intersection=QCollision::LineIntersectionLine(d1A->GetGlobalPosition(),d1B->GetGlobalPosition(),d2A->GetGlobalPosition(),d2B->GetGlobalPosition() );
+			
+			if(intersection.isNaN()==false ){
+				d1A->GetOwnerMesh()->GetOwnerBody()->GetWorld()->GetGizmos()->push_back(new QGizmoCircle(intersection,5.0) );
+				polygonIntersection=true;
+				break;
+			}
+		}
+
+	}
+	if(polygonIntersection==true){
+		//cout<<"there is line intersection in polygon"<<endl;
+		pair<QVector,float> averagePosRot=QMesh::GetAveragePositionAndRotation(polygon);
+		vector<QVector> matchingShape=QMesh::GetMatchingParticlePositions(polygon,averagePosRot.first,averagePosRot.second);
+		for(int i=0;i<matchingShape.size();i++ ){
+			QVector force=(matchingShape[i]-polygon[i]->GetGlobalPosition())*0.2;
+			polygon[i]->ApplyForce(force );
+			lastPolygonCornerAngles.clear();
+			return;
+		}
+	}
+
+	bool beginToSaveAngles=false;
+
+	if (lastPolygonCornerAngles.size()!=polygon.size() ){
+		lastPolygonCornerAngles.clear();
+		for(size_t i=0;i<polygon.size();++i ){
+			lastPolygonCornerAngles.push_back(0.0f);
+		}
+		beginToSaveAngles=true;
+	}
+	
+	float minAngle=minAngleConstraintOfPolygon;
+	float maxAngle=(M_PI*2.0)-minAngle;
+
+	for (size_t i=0;i<polygon.size();++i ){
+		size_t pi=(i-1+polygon.size())%polygon.size();
+		size_t ni=(i+1)%polygon.size();
+
+		QParticle *pp=polygon[pi];
+		QParticle *p=polygon[i];
+		QParticle *np=polygon[ni];
+
+		QVector toPrev=pp->GetGlobalPosition()-p->GetGlobalPosition();
+		QVector toNext=np->GetGlobalPosition()-p->GetGlobalPosition();
+
+		float cosA=toNext.Dot(toPrev)/(toPrev.Length()*toNext.Length() );
+		float sinA=toNext.Dot(toPrev.Perpendicular() )/(toPrev.Length()*toNext.Length() );
+
+		float angleRad=atan2(sinA,cosA);
+
+
+
+		if(angleRad<0){
+			angleRad=(M_PI*2.0)-abs(angleRad);
+		}
+
+
+		
+		if(beginToSaveAngles){
+			lastPolygonCornerAngles[i]=angleRad;
+			continue;
+		}
+
+
+		QVector d1=QVector::AngleToUnitVector(lastPolygonCornerAngles[i]);
+		QVector d2=QVector::AngleToUnitVector(angleRad);
+		float angleDifference=QVector::AngleBetweenTwoVectors(d2,d1);
+
+		angleRad=lastPolygonCornerAngles[i]+angleDifference;
+
+		
+
+
+		if(angleRad>maxAngle){
+			float diffAngle=maxAngle-angleRad;
+			float angularForce=diffAngle*0.5f;
+
+			
+			
+			pp->SetGlobalPosition( p->GetGlobalPosition()+toPrev.Rotated(angularForce) );
+			np->SetGlobalPosition( p->GetGlobalPosition()+toNext.Rotated(-angularForce) );
+
+			
+			
+		}
+
+		if(angleRad<minAngle){
+			float diffAngle=minAngle-angleRad;
+			float angularForce=diffAngle*0.5f;
+
+			pp->SetGlobalPosition( p->GetGlobalPosition()+toPrev.Rotated(angularForce) );
+			np->SetGlobalPosition( p->GetGlobalPosition()+toNext.Rotated(-angularForce) );
+
+			
+		}
+
+		lastPolygonCornerAngles[i]=angleRad;
+
+		
+	}
+
 }
 
 bool QMesh::CheckIsPolygonConcave(vector<QParticle *> polygonParticles)
@@ -296,7 +430,7 @@ void QMesh::DecompositePolygon(vector<QParticle *> &polygonParticles, vector<vec
 
 	//Per all subPolygons
 	while (ia!=subPolygons.size()){
-		cout<<"started subpolygons loop ia is:"<<ia <<endl;
+		// cout<<"started subpolygons loop ia is:"<<ia <<endl;
 		auto polyA=subPolygons[ia];
 		bool isDiagonal=false;
 		//Check diagonals
@@ -307,7 +441,7 @@ void QMesh::DecompositePolygon(vector<QParticle *> &polygonParticles, vector<vec
 			for (size_t ib=0;ib<subPolygons.size();ib++ ){
 				if (ia==ib)
 					continue;
-				cout<<"started subpolygons loop ib is:"<<ib <<endl;
+				// cout<<"started subpolygons loop ib is:"<<ib <<endl;
 				auto polyB=subPolygons[ib];
 				for (size_t nb=0;nb<polyB.size();nb++ ){
 					int pB1=polyB[nb];
@@ -322,32 +456,32 @@ void QMesh::DecompositePolygon(vector<QParticle *> &polygonParticles, vector<vec
 						int pIndex=(nb+1)%polyB.size();
 						int pos=na+1;
 						//Adding points to first polygon
-						cout<<"adding next polygon to prev polygon"<<endl;
+						// cout<<"adding next polygon to prev polygon"<<endl;
 						while (pIndex!=(nb-1+polyB.size() )%polyB.size() ){
 							pIndex=(pIndex+1)%polyB.size();
 							polyA.insert(polyA.begin()+pos,polyB[pIndex]);
 							pos+=1;
 						}
 						subPolygons[ia]=polyA;
-						cout<<"erased polygon"<<endl;
+						// cout<<"erased polygon"<<endl;
 						subPolygons.erase(subPolygons.begin()+ib );
-						cout<<"erased polygon finished"<<endl;
+						// cout<<"erased polygon finished"<<endl;
 						isDiagonal=true;
 						break;
 					}
 				}
 				if (isDiagonal){
-					cout<<"exiting for polyB  loop"<<endl;
+					// cout<<"exiting for polyB  loop"<<endl;
 					break;
 				}
 			}
 			if (isDiagonal){
-				cout<<"exiting for polyA loop"<<endl;
+				// cout<<"exiting for polyA loop"<<endl;
 				break;	
 			}
 		}
 		if (isDiagonal){
-			cout<<"continue subpolygons loop ia is:"<<ia <<endl;
+			// cout<<"continue subpolygons loop ia is:"<<ia <<endl;
 			continue;
 		}
 		ia+=1;
@@ -366,6 +500,7 @@ void QMesh::DecompositePolygon(vector<QParticle *> &polygonParticles, vector<vec
 	
 
 }
+
 
 
 QMesh *QMesh::AddSpring(QSpring *spring)
@@ -771,5 +906,56 @@ QMesh::MeshData QMesh::GeneratePolygonMeshData(float radius, int sideCount, QVec
 }
 
 
+pair<QVector, float> QMesh::GetAveragePositionAndRotation(vector<QParticle *> particleCollection)
+{
+    if(particleCollection.size()==1)
+		return pair<QVector, float>(particleCollection[0]->GetGlobalPosition(),0.0f);
+	//Finding Actual Position
+	QVector averagePosition=QVector::Zero();
+	
+	for(int i=0;i<particleCollection.size();i++){
+		QParticle *particle=particleCollection[i];
+		averagePosition+=particle->GetGlobalPosition();
+	}  
+	averagePosition/=particleCollection.size();
+	
+	float averageRotation=0;
+	float cosAxis=0.0f;
+	float sinAxis=0.0f;
+	for(int i=0;i<particleCollection.size();i++){
+		QParticle *particle=particleCollection[i];
+		
+		QVector currentVec=particle->GetGlobalPosition()-averagePosition;
+		cosAxis+=currentVec.Dot(particle->GetPosition() );
+		sinAxis+=currentVec.Dot(particle->GetPosition().Perpendicular() );
+	}
 
+	
+	float rad=atan2(sinAxis,cosAxis);
+	averageRotation=rad;
+	
+
+	return pair< QVector, float >(averagePosition,averageRotation);
+}
+
+vector<QVector> QMesh::GetMatchingParticlePositions(vector<QParticle *> particleCollection, QVector targetPosition, float targetRotation)
+{
+    QVector localCenterPosition;
+	for(auto particle:particleCollection){
+		localCenterPosition+=particle->GetPosition();
+	}
+	localCenterPosition/=particleCollection.size();
+
+	vector<QVector> positions;
+	for(int n=0;n<particleCollection.size();n++){
+		QParticle * particle=particleCollection[n];
+		
+		QVector targetPos=(particle->GetPosition()-localCenterPosition).Rotated(-targetRotation);
+		targetPos+=targetPosition;
+		//world->GetGizmos()->push_back(new QGizmoCircle(targetPos,3.0f) );
+		positions.push_back(targetPos);
+	}
+
+	return positions;
+}
 
