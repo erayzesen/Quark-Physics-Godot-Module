@@ -42,6 +42,7 @@ protected:
     QJoint *jointObject=nullptr;
     QRigidBodyNode *bodyA=nullptr;
     QRigidBodyNode *bodyB=nullptr;
+    
 public:
     QJointObject(){
         jointObject=new QJoint(nullptr,QVector(0,0),QVector(0,0),nullptr);

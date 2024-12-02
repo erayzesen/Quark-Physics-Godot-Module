@@ -53,6 +53,7 @@ QWorld::~QWorld(){
 void QWorld::ClearGizmos(){
 	for(auto gizmo:gizmos){
 		delete gizmo;
+		gizmo=nullptr;
 	}
 	gizmos.clear();
 }
@@ -73,14 +74,22 @@ void QWorld::Update(){
 		body->Update();
 	}
 
+	for(auto body:bodies){
+		if (body->GetEnabled()==false )
+			continue;
+		body->PostUpdate();
+	}
+	
+
 	//OnPreStep() PreStep Event of bodies
 	for(auto body:bodies){
 		if (body->GetEnabled()==false )
 			continue;
+		body->OnPreStep();
 		if(body->PreStepEventListener!=nullptr){
 			body->PreStepEventListener(body);
 		}
-		body->OnPreStep();
+		
 	}
 
 
@@ -565,6 +574,23 @@ vector<QParticle *> QWorld::GetParticlesCloseToPoint(QVector point, float distan
 
 bool QWorld::CollideWithWorld(QBody *body){
 
+	vector<QManifold> manifoldList=TestCollisionWithWorld(body);
+	if(manifoldList.size()==0)
+		return false;
+
+	std::cout<<manifoldList.size()<<endl;
+	for (auto manifold : manifoldList) {
+		manifold.Solve();
+	}
+	for (auto manifold : manifoldList) {
+		manifold.SolveFrictionAndVelocities();
+	}
+
+	return true;
+}
+
+vector<QManifold> QWorld::TestCollisionWithWorld(QBody *body)
+{
 	sort(bodies.begin(),bodies.end(),SortBodiesHorizontal);
 	bool seperated=false;
 
@@ -600,35 +626,25 @@ bool QWorld::CollideWithWorld(QBody *body){
 			break;
 
 	}
-	if(manifoldList.size()==0)
-		return false;
-
-	std::cout<<manifoldList.size()<<endl;
-	for (auto manifold : manifoldList) {
-		manifold.Solve();
-	}
-	for (auto manifold : manifoldList) {
-		manifold.SolveFrictionAndVelocities();
-	}
-
-	return true;
+    return manifoldList;
 }
-
-
-
 
 void QWorld::ClearBodies(){
 	for(int i=0;i<bodies.size();i++){
-		delete bodies[i];
-		bodies[i]=nullptr;
+		if (bodies[i]!=nullptr){
+			delete bodies[i];
+			bodies[i]=nullptr;
+		}
 	}
 	
 	bodies.clear();
 }
 QWorld* QWorld::ClearJoints(){
 	for(int i=0;i<joints.size();i++){
-		delete joints[i];
-		joints[i]=nullptr;
+		if (joints[i]!=nullptr){
+			delete joints[i];
+			joints[i]=nullptr;
+		}
 	}
 	joints.clear();
 	return this;
@@ -637,8 +653,10 @@ QWorld* QWorld::ClearJoints(){
 QWorld* QWorld::ClearSprings()
 {
 	for(int i=0;i<springs.size();i++){
-		delete springs[i];
-		springs[i]=nullptr;
+		if (springs[i]!=nullptr){
+			delete springs[i];
+			springs[i]=nullptr;
+		}
 	}
 	springs.clear();
 	return this;
@@ -647,8 +665,10 @@ QWorld* QWorld::ClearSprings()
 QWorld* QWorld::ClearRaycasts()
 {
 	for(int i=0;i<raycasts.size();i++){
-		delete raycasts[i];
-		raycasts[i]=nullptr;
+		if (raycasts[i]!=nullptr){
+			delete raycasts[i];
+			raycasts[i]=nullptr;
+		}
 	}
 	raycasts.clear();
 	return this;

@@ -49,6 +49,7 @@ public:
     ~QRaycastObject(){
         if(raycastObject!=nullptr)
             delete raycastObject;
+            raycastObject=nullptr;
     };
 
     QRaycastObject * configure(Vector2 position, Vector2 ray_vector, bool enable_containing_bodies=false,int collidable_layers=1){

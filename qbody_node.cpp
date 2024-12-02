@@ -81,6 +81,8 @@ void QBodyNode::_bind_methods() {
      ClassDB::bind_method(D_METHOD("get_body_specific_time_scale_enabled"),&QBodyNode::get_body_specific_time_scale_enabled );
      ClassDB::bind_method(D_METHOD("get_body_specific_time_scale"),&QBodyNode::get_body_specific_time_scale );
      ClassDB::bind_method(D_METHOD("get_enabled"),&QBodyNode::get_enabled );
+     ClassDB::bind_method(D_METHOD("get_velocity_limit"),&QBodyNode::get_velocity_limit );
+     ClassDB::bind_method(D_METHOD("get_integrated_velocities_enabled"),&QBodyNode::get_integrated_velocities_enabled );
 
      //Set
      ClassDB::bind_method(D_METHOD("set_body_position","value","with_previous_position"),&QBodyNode::set_body_position );
@@ -103,6 +105,8 @@ void QBodyNode::_bind_methods() {
      ClassDB::bind_method(D_METHOD("set_body_spesific_time_scale_enabled","value"),&QBodyNode::set_body_spesific_time_scale_enabled );
      ClassDB::bind_method(D_METHOD("set_body_spesific_time_scale","value"),&QBodyNode::set_body_spesific_time_scale );
      ClassDB::bind_method(D_METHOD("set_enabled","value"),&QBodyNode::set_enabled );
+     ClassDB::bind_method(D_METHOD("set_velocity_limit","value"),&QBodyNode::set_velocity_limit );
+     ClassDB::bind_method(D_METHOD("set_integrated_velocities_enabled","value"),&QBodyNode::set_integrated_velocities_enabled );
      ClassDB::bind_method(D_METHOD("wake_up"),&QBodyNode::wake_up );
 
      ClassDB::bind_method(D_METHOD("add_mesh_node","mesh_node"),&QBodyNode::add_mesh_node );
@@ -113,9 +117,10 @@ void QBodyNode::_bind_methods() {
      
 
      //Export Features
-     
+     ADD_PROPERTY( PropertyInfo(Variant::BOOL, "enabled"),"set_enabled","get_enabled" );
      ADD_PROPERTY( PropertyInfo(Variant::INT, "mode", PROPERTY_HINT_ENUM, "Dynamic,Static"),"set_mode","get_mode" );
      ADD_PROPERTY( PropertyInfo(Variant::BOOL, "can_sleep"),"set_can_sleep","get_can_sleep" );
+     ADD_PROPERTY( PropertyInfo(Variant::REAL, "velocity_limit"),"set_velocity_limit","get_velocity_limit" );
 
      ADD_GROUP("Physics Properties","");
      ADD_PROPERTY( PropertyInfo(Variant::REAL, "mass"),"set_mass","get_mass" );
@@ -259,6 +264,14 @@ bool QBodyNode::get_enabled() {
 	return bodyObject->GetEnabled();
 }
 
+float QBodyNode::get_velocity_limit() {
+	return bodyObject->GetVelocityLimit();
+}
+
+bool QBodyNode::get_integrated_velocities_enabled() {
+	return bodyObject->GetIntegratedVelocitiesEnabled();
+}
+
 //SET METHODS
 
 QBodyNode *QBodyNode::set_body_position(Vector2 value, bool with_previous_position) {
@@ -374,6 +387,16 @@ QBodyNode *QBodyNode::set_enabled(bool value) {
 	return this;
 }
 
+QBodyNode *QBodyNode::set_velocity_limit(float value) {
+    bodyObject->SetVelocityLimit(value);
+	return this;
+}
+
+QBodyNode *QBodyNode::set_integrated_velocities_enabled(bool value) {
+    bodyObject->SetIntegratedVelocitiesEnabled(value);
+	return this;
+}
+
 QBodyNode *QBodyNode::wake_up() {
     bodyObject->WakeUp();
 	return this;
@@ -434,7 +457,7 @@ QMeshNode *QBodyNode::get_mesh_node_with_object(QMesh *mesh_object) {
 QBodyNode *QBodyNode::type_cast(Object *obj) {
 	Node2D *node=Object::cast_to<Node2D>(obj);
     if(node!=nullptr){
-        if(node->get_class()=="QBodyNode" || node->get_class()=="QRigidBodyNode" || node->get_class()=="QSoftBodyNode" || node->get_class()=="QAreaBodyNode"){
+        if(node->get_class()=="QBodyNode" || node->get_class()=="QRigidBodyNode" || node->get_class()=="QSoftBodyNode" || node->get_class()=="QAreaBodyNode" || node->get_class()=="QPlatformerBodyNode" ){
             return static_cast<QBodyNode*>(node);
         }
     }

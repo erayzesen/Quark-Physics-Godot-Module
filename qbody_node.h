@@ -132,6 +132,10 @@ public:
 
     bool get_enabled();
 
+    float get_velocity_limit();
+
+    bool get_integrated_velocities_enabled();
+
     //Set Methods
 
     QBodyNode *set_body_position(Vector2 value,bool with_previous_position=true);
@@ -175,6 +179,10 @@ public:
     QBodyNode *set_body_spesific_time_scale(float value);
 
     QBodyNode *set_enabled(bool value);
+
+    QBodyNode *set_velocity_limit(float value);
+
+    QBodyNode *set_integrated_velocities_enabled(bool value);
 
     //Sleeping
 

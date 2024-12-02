@@ -43,14 +43,18 @@ QMesh::QMesh(){
 QMesh::~QMesh()
 {
 	for(int i=0;i<particles.size();i++){
-		delete particles[i];
-		particles[i]=nullptr;
+		if (particles[i]!=nullptr){
+			delete particles[i];
+			particles[i]=nullptr;
+		}
 	}
 	particles.clear();
 
 	for(int i=0;i<springs.size();i++){
-		delete springs[i];
-		springs[i]=nullptr;
+		if(springs[i]!=nullptr){
+			delete springs[i];
+			springs[i]=nullptr;
+		}
 	}
 	springs.clear();
 
@@ -685,7 +689,7 @@ float QMesh::GetPolygonArea(vector<QParticle *> &polygonPoints,bool withLocalPos
 		area+=(a+b)*h*0.5f;
 	}
 
-	return abs(area);
+	return -area;
 }
 
 bool QMesh::CheckCollisionBehaviors(QMesh *meshA, QMesh *meshB, CollisionBehaviors firstBehavior, CollisionBehaviors secondBehavior){

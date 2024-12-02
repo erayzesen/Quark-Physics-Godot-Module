@@ -76,8 +76,10 @@ public:
        
     };
     ~QMeshNode(){
-        if(meshObject!=nullptr)
+        if(meshObject!=nullptr){
             delete meshObject;
+            meshObject=nullptr;
+        }
     }
 
 

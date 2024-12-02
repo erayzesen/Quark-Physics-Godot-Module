@@ -15,10 +15,12 @@
 #include "qspring_object.h"
 #include "qjoint_object.h"
 #include "qraycast_object.h"
+#include "qplatformerbody_node.h"
 
 
 void register_quark_physics_types(){
     ClassDB::register_virtual_class<QBodyNode>();
+    ClassDB::register_class<QPlatformerBodyNode>();
     ClassDB::register_class<QRigidBodyNode>();
     ClassDB::register_class<QSoftBodyNode>();
     ClassDB::register_class<QAreaBodyNode>();

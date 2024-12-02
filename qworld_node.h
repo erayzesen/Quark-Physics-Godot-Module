@@ -73,6 +73,7 @@ public:
         }
         if (spatialHashing!=nullptr){
             delete spatialHashing;
+            spatialHashing=nullptr;
         }
     };
 
